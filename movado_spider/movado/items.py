@@ -8,7 +8,7 @@
 import scrapy
 
 
-class MovadoCapstoneItem(scrapy.Item):
+class MovadoItem(scrapy.Item):
     watch_model = scrapy.Field()
     in_stock = scrapy.Field()
     price = scrapy.Field()
