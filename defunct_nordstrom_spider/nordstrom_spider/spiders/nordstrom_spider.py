@@ -5,7 +5,7 @@ import re
 class NordstromSpider(Spider):
 
     name = "nordstrom_spider"
-    allowed_domains = ['https://shop.nordstrom.com/']
+    allowed_domains = ['shop.nordstrom.com/']
     start_urls = ['https://shop.nordstrom.com/sr?origin=keywordsearch&keyword=movado']
 
 
@@ -13,8 +13,9 @@ class NordstromSpider(Spider):
 
         # create search page list 
         page_count = response.xpath()
-        page_urls = f'https://www.movado.com/us/en/shop-watches/shop-all-watches/?start=0&sz={total_products}'
-        yield Request(url=url, callback=self.parse_page_results)
+        page_urls = [f'https://shop.nordstrom.com/sr?origin=recentsearches1&keyword=movado&page={page}' for page in page_count]
+        for url in page_urls:
+            yield Request(url=url, callback=self.parse_page_results)
 
     def parse_page_results(self, response):
 
