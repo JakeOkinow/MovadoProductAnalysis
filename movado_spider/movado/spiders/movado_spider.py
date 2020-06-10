@@ -69,7 +69,7 @@ class MovadoSpider(Spider):
         if response.xpath('//div[@class="exclusive-badges"]/span/text()').extract_first():
             online_exclusive = response.xpath('//div[@class="exclusive-badges"]/span/text()').extract_first()
         else:
-            online_exclusive = "NA"
+            online_exclusive = "No"
 
 
 
