@@ -18,6 +18,7 @@ search_request.submit()
 
 csv_file = open('nordstrom_website.csv', 'w', encoding='utf-8', newline='')
 writer = csv.writer(csv_file)
+writer.writerow(['watch_model', 'color', 'in_stock', 'price', 'description', 'bullet_details', 'review_count', 'rating', 'review_text'])
 
 popupad_acknowledged = False
 
@@ -94,10 +95,12 @@ for url in product_urls:
         review_text = []
         while True:
             scroll_height += 500
+            time.sleep(.5)
             driver.execute_script("window.scrollTo(0, " + str(scroll_height) + ");")
             new_height = driver.execute_script("return document.body.scrollHeight")
             if new_height < scroll_height:
                 break
+        time.sleep(2)
         reviews = driver.find_elements_by_xpath('//div[@class="_13VE3"]')
         for review in reviews:
             review_text.append(review.text)
@@ -115,7 +118,9 @@ for url in product_urls:
         product_dict['rating'] = rating
         product_dict['review_text'] = review_text
 
-        writer.writerow(product_dict.values())
+        writer.writerow([product_dict['watch_model'], product_dict['color'], product_dict['in_stock'], product_dict['price'], \
+            product_dict['description'], product_dict['bullet_details'], product_dict['review_count'], product_dict['rating'], \
+            product_dict['review_text']])
 
 
 csv_file.close()
