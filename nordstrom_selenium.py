@@ -5,6 +5,7 @@ import csv
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.keys import Keys
 
 # Start at Nordstrom's home page and execute search for "movado"
@@ -93,17 +94,46 @@ for url in product_urls:
         # REVIEW TEXT
         scroll_height = 0
         review_text = []
-        while True:
-            scroll_height += 500
+        search_for_reviews = True
+        while search_for_reviews:
+            # scroll slowly through page for all elements to load
+            scroll_height += 300
             time.sleep(.5)
             driver.execute_script("window.scrollTo(0, " + str(scroll_height) + ");")
             new_height = driver.execute_script("return document.body.scrollHeight")
+            # when scrolling height exceeps page height, scrape reviews
             if new_height < scroll_height:
-                break
-        time.sleep(2)
-        reviews = driver.find_elements_by_xpath('//div[@class="_13VE3"]')
-        for review in reviews:
-            review_text.append(review.text)
+                while True:
+                    try:
+                        reviews = WebDriverWait(driver, 2,ignored_exceptions=StaleElementReferenceException)\
+                                    .until(EC.presence_of_all_elements_located((By.XPATH, '//div[@class="_13VE3"]')))
+                    # if there are no reviews, break and move to next product
+                    except:
+                        search_for_reviews = False
+                        break
+                    for review in reviews:
+                        review_text.append(review.text)
+                    # if a "next review page" button exists, click and rescrape reviews
+                    try:
+                        next_review_page = WebDriverWait(driver, 2,ignored_exceptions=StaleElementReferenceException)\
+                                .until(EC.presence_of_element_located((By.XPATH, '//li[@class="_27MWr _9EQqw"]/a')))
+                        driver.execute_script("arguments[0].scrollIntoView();", next_review_page)
+                        nextbutton=WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.XPATH,"//li[@class='_27MWr _9EQqw']/a/span[text()='Next']")))
+                        # the popup ad can interrupt clicking, so first check in case it hasn't been acknowledged
+                        if popupad_acknowledged == False:
+                            try:
+                                driver.execute_script("arguments[0].click();", nextbutton)
+                            except:
+                                driver.find_element_by_xpath('//a[@aria-label="No thanks"]').click()
+                                popupad_acknowledged = True
+                                driver.execute_script("arguments[0].click();", nextbutton)
+                        else:
+                            driver.execute_script("arguments[0].click();", nextbutton)
+                        scroll_height = 0
+                        break
+                    except:
+                        search_for_reviews = False
+                        break
         html = driver.find_element_by_tag_name('html')
         html.send_keys(Keys.UP)
 
