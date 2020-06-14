@@ -31,13 +31,12 @@ while True:
     if not len(driver.find_elements_by_xpath('//article[@class="_1AOd3 QIjwE"]/div/a')):
         break
     # wait for all watches to load
-    wait_product = WebDriverWait(driver, 10)
-    product_xpath_list = wait_product.until(EC.presence_of_all_elements_located((By.XPATH,
+    product_xpath_list = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.XPATH,
                                 '//article[@class="_1AOd3 QIjwE"]/div/a')))
     # Iterate through the xpath list and collect each watch's url
     for partial_xpath in product_xpath_list:
         product_urls.append(partial_xpath.get_attribute("href"))
-    # update driver's url to next search results page, allowing while loop to gather more product urls
+    # update driver's url to next search result's page, allowing while loop to gather more product urls
     try:
         if index == 2:  
             driver.get("".join([driver.current_url, "&page=", str(index)]))
@@ -49,23 +48,83 @@ while True:
 # from list of all pruduct urls, scrape each product's page
 for url in product_urls:
     driver.get(url)
+    product_dict = {}
+
+    # WATCH MODEL
+    watch_model = driver.find_element_by_xpath('//h1[@itemprop="name"]').text
+    
+    # DESCRIPTION AND BULLETED DETAILS
+    description = driver.find_element_by_xpath('//div[@class="_3LvFj"]//p').text
+    bullet_details = driver.find_element_by_xpath('//ul[@class="_1D4Qk"]').text
+    if bullet_details == False:
+        driver.execute_script("window.scrollTo(0, " + '300' + ");")
+        bullet_details = driver.find_element_by_xpath('//ul[@class="_1D4Qk"]').text
+    
+    # REVIEW COUNT
+    try:
+        review_count = driver.find_element_by_class_name("_2cm3y").get_attribute("textContent")
+    except:
+        review_count = 0
+    
+    # RATING
+    try:
+        rating = driver.find_element_by_xpath('//span[@itemprop="ratingValue"]').get_attribute("textContent")
+    except:
+        rating = "NA"
+    
+    # REVIEW TEXT
+    scroll_height = 0
+    review_text = []
+    search_for_reviews = True
+    while search_for_reviews and review_count != 0:
+        # scroll slowly through page for all elements to load
+        scroll_height += 300
+        time.sleep(.5)
+        driver.execute_script("window.scrollTo(0, " + str(scroll_height) + ");")
+        new_height = driver.execute_script("return document.body.scrollHeight")
+        # when scrolling height exceeps page height, scrape reviews
+        if new_height < scroll_height:
+            while True:
+                reviews = WebDriverWait(driver, 2,ignored_exceptions=StaleElementReferenceException)\
+                                .until(EC.presence_of_all_elements_located((By.XPATH, '//div[@class="_13VE3"]')))
+                for review in reviews:
+                    review_text.append(review.text)
+                # if a "next review page" button exists, click and rescrape reviews
+                try:
+                    next_review_page = WebDriverWait(driver, 2,ignored_exceptions=StaleElementReferenceException)\
+                            .until(EC.presence_of_element_located((By.XPATH, '//li[@class="_27MWr _9EQqw"]/a')))
+                    driver.execute_script("arguments[0].scrollIntoView();", next_review_page)
+                    nextbutton=WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.XPATH,"//li[@class='_27MWr _9EQqw']/a/span[text()='Next']")))
+                    # the popup ad can interrupt clicking, so first check in case it hasn't been acknowledged
+                    if popupad_acknowledged == False:
+                        try:
+                            driver.execute_script("arguments[0].click();", nextbutton)
+                        except:
+                            driver.find_element_by_xpath('//a[@aria-label="No thanks"]').click()
+                            popupad_acknowledged = True
+                            driver.execute_script("arguments[0].click();", nextbutton)
+                    else:
+                        driver.execute_script("arguments[0].click();", nextbutton)
+                    scroll_height = 0
+                    break
+                except:
+                    search_for_reviews = False
+                    break
+    
     # collect all possible colors/variations of watch on page
     elements = driver.find_elements_by_xpath('//ul[@id="product-page-swatches"]//button')
     if not elements:
         elements = driver.find_elements_by_xpath('//div[@class="_3nIoM _11U2i"]//button')
-    # try select color, or close pop up ad then select
+    # try selecting color, or address pop up ad and then select
     for button in elements:
+        html = driver.find_element_by_tag_name('html')
+        html.send_keys(Keys.UP)
         try:
             button.click()
         except:
             driver.find_element_by_xpath('//a[@aria-label="No thanks"]').click()
             popupad_acknowledged = True
             button.click()
-
-        product_dict = {}
-
-        # WATCH MODEL
-        watch_model = driver.find_element_by_xpath('//h1[@itemprop="name"]').text
         # COLOR
         color = re.sub("selected | color", "", button.find_element_by_xpath('./img').get_attribute("alt"))
         # IN STOCK
@@ -78,64 +137,7 @@ for url in product_urls:
             price = driver.find_element_by_xpath('//span[@id="current-price-string"]').text
         else:
             price = "NA"
-        # DESCRIPTION AND BULLETED DETAILS
-        description = driver.find_element_by_xpath('//div[@class="_3LvFj"]//p').text
-        bullet_details = driver.find_element_by_xpath('//ul[@class="_1D4Qk"]').text
-        # REVIEW COUNT
-        try:
-            review_count = driver.find_element_by_class_name("_2cm3y").get_attribute("textContent")
-        except:
-            review_count = 0
-        # RATING
-        try:
-            rating = driver.find_element_by_xpath('//span[@itemprop="ratingValue"]').get_attribute("textContent")
-        except:
-            rating = "NA"
-        # REVIEW TEXT
-        scroll_height = 0
-        review_text = []
-        search_for_reviews = True
-        while search_for_reviews:
-            # scroll slowly through page for all elements to load
-            scroll_height += 300
-            time.sleep(.5)
-            driver.execute_script("window.scrollTo(0, " + str(scroll_height) + ");")
-            new_height = driver.execute_script("return document.body.scrollHeight")
-            # when scrolling height exceeps page height, scrape reviews
-            if new_height < scroll_height:
-                while True:
-                    try:
-                        reviews = WebDriverWait(driver, 2,ignored_exceptions=StaleElementReferenceException)\
-                                    .until(EC.presence_of_all_elements_located((By.XPATH, '//div[@class="_13VE3"]')))
-                    # if there are no reviews, break and move to next product
-                    except:
-                        search_for_reviews = False
-                        break
-                    for review in reviews:
-                        review_text.append(review.text)
-                    # if a "next review page" button exists, click and rescrape reviews
-                    try:
-                        next_review_page = WebDriverWait(driver, 2,ignored_exceptions=StaleElementReferenceException)\
-                                .until(EC.presence_of_element_located((By.XPATH, '//li[@class="_27MWr _9EQqw"]/a')))
-                        driver.execute_script("arguments[0].scrollIntoView();", next_review_page)
-                        nextbutton=WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.XPATH,"//li[@class='_27MWr _9EQqw']/a/span[text()='Next']")))
-                        # the popup ad can interrupt clicking, so first check in case it hasn't been acknowledged
-                        if popupad_acknowledged == False:
-                            try:
-                                driver.execute_script("arguments[0].click();", nextbutton)
-                            except:
-                                driver.find_element_by_xpath('//a[@aria-label="No thanks"]').click()
-                                popupad_acknowledged = True
-                                driver.execute_script("arguments[0].click();", nextbutton)
-                        else:
-                            driver.execute_script("arguments[0].click();", nextbutton)
-                        scroll_height = 0
-                        break
-                    except:
-                        search_for_reviews = False
-                        break
-        html = driver.find_element_by_tag_name('html')
-        html.send_keys(Keys.UP)
+
 
 
         product_dict['watch_model'] = watch_model
