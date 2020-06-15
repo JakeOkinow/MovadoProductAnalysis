@@ -19,17 +19,58 @@ shinyUI(
       dashboardBody(
         tabItems(
           tabItem(tabName = "movado",
-                  fluidRow(plotOutput("movado_price") )
+                  fluidPage(
+                    fluidRow(box(plotOutput("movado_price")))
+                            )
                   ),
           tabItem(tabName = "macys",
-                  fluidRow(plotOutput("macys_stars")),
-                  fluidRow(plotOutput("macys_review_count")),
-                  fluidRow(plotOutput("macys_price")),
+                  fluidPage(
+                    h1(tags$b("Macy's Performance")),
+                    h2("Customer Satisfation: Ratings Distribution"), br(),
+                    fluidRow(box(width = 6, plotOutput("macys_stars")), 
+                             column(width = 6, infoBox(width = 10, title="Total 5-Star-Rated Products", 
+                                                       subtitle = paste0(round(100*macys_5_rating/nrow(macys_df)), "% of products listed on Macy's"), 
+                                                       fill = TRUE, value = macys_5_rating),
+                                    infoBox(width = 10, color = "yellow", title = "Total Unrated Products", value = sum(is.na(macys_df$rating)),
+                                            subtitle = paste0(round(100*sum(is.na(macys_df$rating))/nrow(macys_df)), "% of products listed on Macy's"))
+                                    )
+                             ),
+                    h2("Reviews: Presence and Distribution"), br(),
+                    fluidRow(box(width = 4, p("text text text text text text text")), 
+                             column(width = 8, infoBox(width = 12, fill = TRUE, title = "Most Reviewed Product", value = macys_df[max(macys_df["review_count"]), "watch_model"],
+                                                       subtitle = paste(max(macys_df["review_count"]), "total reviews")) 
+                                    )
+                             ),
+                    fluidRow(box(align = "center", width = 5, htmlOutput("macys_zero_reviews_pie")), 
+                             box(width = 7, plotOutput("macys_review_count_sans_0"))),
+                    h2("Price Distribution"),
+                    fluidRow(box(plotOutput("macys_price")))
+                  )
                   ),
           tabItem(tabName = "nordstrom",
-                  fluidRow(plotOutput("nordstrom_stars")),
-                  fluidRow(plotOutput("nordstrom_review_count")),
-                  fluidRow(plotOutput("nordstrom_price")),
+                  fluidPage(
+                    h1(tags$b("Nordstrom's Performance")),
+                    h2("Customer Satisfation: Ratings Distribution"), br(),
+                    fluidRow(box(width = 6, plotOutput("nordstrom_stars")), 
+                             column(width = 6, infoBox(width = 10, title="Total 5-Star-Rated Products", 
+                                                       subtitle = paste0(round(100*nordstrom_5_rating/nrow(nordstrom_df)), "% of Movado products"), 
+                                                       fill = TRUE, value = nordstrom_5_rating),
+                                    infoBox(width = 10, color = "yellow", title = "Total Unrated Products", value = sum(is.na(nordstrom_df$rating)),
+                                            subtitle = paste0(round(100*sum(is.na(nordstrom_df$rating))/nrow(nordstrom_df)), "% of Movado products"))
+                                    )
+                             ),
+                    h2("Reviews: Presence and Distribution"), br(),
+                    fluidRow(box(width = 7, p("Almost exactly half of all products listed on Nordstrom have received at least one review.
+                                   Of the products who have received reviews, a majority have received only 1-3 reviews. One 
+                                   outlier, the Movado", as.character(nordstrom_df[max(nordstrom_df["review_count"]), "watch_model"]), "has over 65 reviews and greatly surpasses all 
+                                   other Movado products in terms of reviews received.")), 
+                             column(width = 5, infoBox(width = 12, fill = TRUE, title = "Most Reviewed Product", value = nordstrom_df[max(nordstrom_df["review_count"]), "watch_model"],
+                                                       subtitle = paste(max(nordstrom_df["review_count"]), "total reviews")))),
+                    fluidRow(box(align = "center", width = 5, htmlOutput("nordstrom_zero_reviews_pie")), 
+                             box(width = 7, plotOutput("nordstrom_review_count_sans_0"))),
+                    h2("Price Distribution"),
+                    fluidRow(box(plotOutput("nordstrom_price")))
+                            )
                   ),
           tabItem(tabName = "amazon", "AMAZON PAGE"
                   ),
