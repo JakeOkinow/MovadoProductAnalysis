@@ -37,7 +37,7 @@ class AmazonSpider(Spider):
         print()
         print(response.xpath('/html/body/div[1]/div[2]/div[1]/div[1]/div/span[3]/div[2]/div[3]/div/span/div/div/div[2]/h2/a/span/text()').get())
 
-        all_detail_urls = response.xpath('//a[@class="a-link-normal a-text-normal"]/@href').getall()
+        all_detail_urls = response.xpath('//span[@data-component-type="s-product-image"]/a/@href').getall()
 
         print('hello')
         print(len(all_detail_urls))
@@ -54,13 +54,19 @@ class AmazonSpider(Spider):
 
     def parse_detail_page(self, response):
         # Product name
-        product = response.xpath('//*[@id="productTitle"]/text()').get()
+        product = response.xpath('//span[@id="productTitle"]/text()').get()
+        # code number
+        code = response.xpath('//td[@class="a-span7 a-size-base"]/text()').getall()
+        print("------------------")
+        print(product)
+        code = code[1]
+        print("------------------")
         #asin number
-        asin = response.xpath('//*[@id="detailBullets_feature_div"]/ul/li[4]/span/span[2]/text()').get()
+        asin = response.xpath('//ul[@class="a-unordered-list a-nostyle a-vertical a-spacing-none"]/li[4]/span/span[2]/text()').get()
 
         price_seller = 'https://www.amazon.com/gp/offer-listing/{}/ref=dp_olp_new_center?ie=UTF8&condition=new'.format(asin)
 
-        yield Request(url=price_seller, callback=self.parse_seller_page)
+        yield Request(url=price_seller, callback=self.parse_seller_page, meta=dict(code = code))
 
         # Number of answered question for each product
     #     q_and_a_url = 'https://www.amazon.com/ask/questions/asin/{x}/1/ref=ask_ql_psf_ql_hza'.format(asin)
@@ -103,14 +109,17 @@ class AmazonSpider(Spider):
 
         product = response.xpath('//div[@id="olpProductDetails"]/h1/text()').getall()
         product = product[1].strip()
+        code = response.meta['code']
         price = list(map(str.strip, price))
         print(product)
+        print(code)
         print(price)
         print(seller)
 
         for i in range(len(price)):
             item = AmazonItem()
             item['product'] = product
+            item['code'] = code
             item['price'] = price[i]
             item['seller'] = seller[i]
             yield item
