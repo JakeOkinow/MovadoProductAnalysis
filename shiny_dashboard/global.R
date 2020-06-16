@@ -16,3 +16,6 @@ movado_df <- read.csv("data/movado_website.csv", stringsAsFactors = FALSE)  %>%
 nordstrom_df <- read.csv("data/nordstrom_website.csv", stringsAsFactors = FALSE) %>% 
   mutate(price = gsub(",", "", price)) %>% mutate(price = as.numeric(substr(price, 2, nchar(price))))
 nordstrom_5_rating <- nrow(nordstrom_df[nordstrom_df["rating"] == 5 & !is.na(nordstrom_df["rating"]), ])
+
+amazon_df <- read.csv("data/amazonsellerssecond copy.csv", stringsAsFactors = FALSE) %>% 
+  mutate(price = gsub(",|$", "", price)) %>% mutate(price = as.numeric(substr(price, 2, nchar(price))))
