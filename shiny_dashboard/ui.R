@@ -40,7 +40,8 @@ shinyUI(
                                  than Movado's. Further investigation will determine if this is because of a tendency 
                                  to carry more of the higher priced watches of Movado's."), 
                              box(plotOutput("overview_price"))
-                    )
+                    ),
+                    h2("Customer Satisfaction")
                     
                   )
           ),
@@ -114,7 +115,8 @@ shinyUI(
                                     infoBox(width = 10, title = "Median Price", 
                                             value = paste0("$", round(median(amazon_df$price), 2)))
                                     )
-                            )
+                            ),
+                    h2("Top Quatity Sellers: Sellers with > # Listings")
                   )
                   ),
           tabItem(tabName = "tag_heuer", "competition 1"
