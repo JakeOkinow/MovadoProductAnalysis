@@ -34,7 +34,12 @@ class MacysSpider(Spider):
 
         watch_model = response.xpath('//h1[@class="p-name h3"]//text()').extract_first().strip()
         # in_stock
-        price = response.xpath('//div[@data-el="header"]//div[@class="price"]/text()').extract_first().strip()
+        try:
+            # Sale Price
+            price = response.xpath('//div[@data-el="header"]//span[@data-auto="sale-price"]/text()').extract_first().strip()
+        except:
+            # Full Price
+            price = response.xpath('//div[@data-el="header"]//div[@class="price"]/text()').extract_first().strip()
         description = response.xpath('//div[@class="accordion-body"]\
                                     [@data-el="product-details"]//p/text()').extract_first().strip() 
         bulleted_details = [x for x in response.xpath('//div[@class="accordion-body"]\
