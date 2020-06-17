@@ -27,6 +27,23 @@ collect_gender <- function(X){
   return(v)
 }
 
+collect_model_num <- function(X){
+  for (item in X){
+    v <- c()
+    m <- regexpr(" \\d{4}\\d+ | \\d+$", item, perl=FALSE, fixed=FALSE)
+    n <- regexpr("-?—?-?\\d{4}\\d+.?0?)", item, perl=FALSE, fixed=FALSE)
+    if (m[1] != -1){
+      v <- c(v, regmatches(item, m))
+    } else if (n[1] != -1){
+      v <- c(v, gsub(")", "", regmatches(item, n)))
+    } else {
+      v <- c(v, "Unknown")
+    }
+  } 
+  return(v)
+}
+
+
 ### LOAD DATA AND CLEAN ###
 
 macys_df <- read.csv("data/macys_website.csv", stringsAsFactors = FALSE)  %>% 
@@ -45,6 +62,7 @@ nordstrom_5_rating <- nrow(nordstrom_df[nordstrom_df["rating"] == 5 & !is.na(nor
 amazon_df <- read.csv("data/amazonsellerssecond copy.csv", stringsAsFactors = FALSE) %>% 
   mutate(price = gsub(",|$", "", price)) %>% mutate(price = as.numeric(substr(price, 2, nchar(price))))
 amazon_df["gender"] <- sapply(amazon_df$product, collect_gender)
+amazon_df["product_number"] <- sapply(amazon_df$product, collect_model_num)
 
 
 
