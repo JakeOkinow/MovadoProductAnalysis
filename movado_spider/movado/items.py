@@ -22,3 +22,4 @@ class MovadoItem(scrapy.Item):
     strap = scrapy.Field()
     bracelet = scrapy.Field()
     online_exclusive = scrapy.Field()
+    model_number = scrapy.Field()
