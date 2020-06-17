@@ -22,7 +22,36 @@ df
 ```
 
 ```{r}
+
+```
+
+CLEAN DATA WITH THIS SQUARE
+
+```{r}
+df <- df %>% mutate(., code = trimws(as.character(code)))
+df <- df %>% mutate(., q_count = trimws(as.character(q_count)))
+df <- df %>% mutate(., q_count = gsub(" answered questions", "", q_count))
+
+df <- df %>% mutate(., rev_count = gsub(" ratings", "", rev_count))
+
+df <- df %>% mutate(., q_count = ifelse(q_count == "", 0, q_count))
+
+df <- df %>% mutate(., rev_count = ifelse(rev_count == "", 0, rev_count))
+
+
+df <- df %>% mutate(., star = as.character(star))
+df <- df %>% mutate(., star = ifelse(nchar(star) < 5,"0.0 out of 5 stars", ifelse(nchar(star) > 18, "0.0 out of 5 stars", star )))
+
+df <- df %>% mutate(., price = as.numeric(gsub(",", "", substring(as.character(price), 2))))
+
+df
+```
+
+
+```{r}
 dff <- df %>% mutate(., price = as.numeric(gsub(",", "", substring(as.character(price), 2))))
+
+
 
 #dff <- dff %>% mutate(., seller = as.character(seller))
 ```
