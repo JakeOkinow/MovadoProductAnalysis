@@ -23,16 +23,26 @@ df
 
 ```{r}
 dff <- df %>% mutate(., price = as.numeric(gsub(",", "", substring(as.character(price), 2))))
+
 #dff <- dff %>% mutate(., seller = as.character(seller))
 ```
 
 ```{r}
-gr = dff %>% group_by(seller)
-gr = gr %>% summarize(count = n())
+gs = dff %>% group_by(seller) %>% summarize(count = n()) %>% filter(., count > 2)
+gp = dff %>% group_by(product) %>% summarize(count = n()) %>% filter(., count > 1)
+
+gs
+gp
+
+dff
+distinct(dff)
 
 ```
 
 
+```{r}
+dff %>% filter(., code == 3660029)
+```
 
 
 ## Including Plots

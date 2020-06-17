@@ -57,16 +57,30 @@ class AmazonSpider(Spider):
         product = response.xpath('//span[@id="productTitle"]/text()').get()
         # code number
         code = response.xpath('//td[@class="a-span7 a-size-base"]/text()').getall()
-        print("------------------")
-        print(product)
-        code = code[1]
-        print("------------------")
+        code = code[1].strip()
         #asin number
         asin = response.xpath('//ul[@class="a-unordered-list a-nostyle a-vertical a-spacing-none"]/li[4]/span/span[2]/text()').get()
 
+        #model_number = response.request.url
+        #model_number = model_number[model_number.rfind("-")+1:model_number.rfind(".")]
+        #stars
+        star = response.xpath('//span[@class="a-icon-alt"]/text()').get().strip()
+        #number of reviews
+        rev_count = response.xpath('//span[@id="acrCustomerReviewText"]/text()').get().strip()
+        #number of questions
+        q_count = response.xpath('//a[@id="askATFLink"]/span/text()').get().strip()
+
+        print("------------------")
+        print(product)
+        print(code)
+        print(star)
+        print(rev_count)
+        print(q_count)
+        print("------------------")
+
         price_seller = 'https://www.amazon.com/gp/offer-listing/{}/ref=dp_olp_new_center?ie=UTF8&condition=new'.format(asin)
 
-        yield Request(url=price_seller, callback=self.parse_seller_page, meta=dict(code = code))
+        yield Request(url=price_seller, callback=self.parse_seller_page, meta=dict(code = code, star = star, rev_count = rev_count, q_count = q_count))
 
         # Number of answered question for each product
     #     q_and_a_url = 'https://www.amazon.com/ask/questions/asin/{x}/1/ref=ask_ql_psf_ql_hza'.format(asin)
@@ -110,6 +124,9 @@ class AmazonSpider(Spider):
         product = response.xpath('//div[@id="olpProductDetails"]/h1/text()').getall()
         product = product[1].strip()
         code = response.meta['code']
+        star = response.meta['star']
+        rev_count = response.meta['rev_count']
+        q_count = response.meta['q_count']
         price = list(map(str.strip, price))
         print(product)
         print(code)
@@ -120,6 +137,9 @@ class AmazonSpider(Spider):
             item = AmazonItem()
             item['product'] = product
             item['code'] = code
+            item['star'] = star
+            item['rev_count'] = rev_count
+            item['q_count'] = q_count
             item['price'] = price[i]
             item['seller'] = seller[i]
             yield item
