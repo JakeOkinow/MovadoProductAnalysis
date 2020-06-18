@@ -57,18 +57,18 @@ class AmazonSpider(Spider):
         product = response.xpath('//span[@id="productTitle"]/text()').get()
         # code number
         code = response.xpath('//td[@class="a-span7 a-size-base"]/text()').getall()
-        code = code[1].strip()
+        code = code[1]
         #asin number
         asin = response.xpath('//ul[@class="a-unordered-list a-nostyle a-vertical a-spacing-none"]/li[4]/span/span[2]/text()').get()
 
         #model_number = response.request.url
         #model_number = model_number[model_number.rfind("-")+1:model_number.rfind(".")]
         #stars
-        star = response.xpath('//span[@class="a-icon-alt"]/text()').get().strip()
+        star = response.xpath('//span[@class="a-icon-alt"]/text()').get()
         #number of reviews
-        rev_count = response.xpath('//span[@id="acrCustomerReviewText"]/text()').get().strip()
+        rev_count = response.xpath('//span[@id="acrCustomerReviewText"]/text()').get()
         #number of questions
-        q_count = response.xpath('//a[@id="askATFLink"]/span/text()').get().strip()
+        q_count = response.xpath('//a[@id="askATFLink"]/span/text()').get()
 
         print("------------------")
         print(product)
