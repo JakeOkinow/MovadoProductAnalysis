@@ -32,7 +32,7 @@ class MovadoSpider(Spider):
         in_stock = response.xpath('//li[@class="text-uppercase"]/div/text()').extract_first()
 
         price = response.xpath('//div[@class="col-12 prices-add-to-cart-actions"]\
-            //span[@class="sales"]//text()').extract()[1].strip()
+            //span[@class="sales"]//text()').extract()[0].strip()
 
         # collect group of various watch details
         dial = ""
@@ -70,6 +70,8 @@ class MovadoSpider(Spider):
             online_exclusive = response.xpath('//div[@class="exclusive-badges"]/span/text()').extract_first()
         else:
             online_exclusive = "No"
+        lnk = response.request.url
+        model_number = lnk[lnk.rfind("-")+1:lnk.rfind(".")]
 
 
 
@@ -88,6 +90,7 @@ class MovadoSpider(Spider):
         item["strap"] = strap
         item["bracelet"] = bracelet
         item["online_exclusive"] = online_exclusive
+        item["model_number"] = model_number
 
         yield item
 

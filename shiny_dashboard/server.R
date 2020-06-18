@@ -8,6 +8,21 @@ function(input, output, session){
   )
   
   
+  # OVERVIEW
+  output$overview_price <- renderPlot(
+    cbind("Mean Prices" = c(round(mean(movado_df$price), 2), round(mean(macys_df$price), 2), 
+                            round(mean(nordstrom_df$price), 2), round(mean(amazon_df$price), 2)),
+          "Median Prices" = c(round(median(movado_df$price), 2), round(median(macys_df$price), 2), 
+                              round(median(nordstrom_df$price), 2), round(median(amazon_df$price), 2)),
+          "Seller"=c("Movado", "Macy's", "Nordstrom", "Amazon")) %>% 
+      data.frame() %>% 
+      ggplot(aes(x = Median.Prices, y=Mean.Prices, color=Seller)) + geom_point(size=9) + 
+      geom_text(aes(label=Seller), vjust=-2) +
+      xlab("Median Prices") + ylab("Mean Prices") + ggtitle("Comparing Mean and Median Prices") +
+      theme(legend.position="none") + guides(size=FALSE)
+  )
+  
+  
   # MACYS
   output$macys_stars <- renderPlot(
     macys_df %>% ggplot() + geom_histogram(aes(x=rating), fill="red") + ggtitle("Macy's Ratings Distribution") + 
@@ -42,7 +57,7 @@ function(input, output, session){
   
   # NORDSTROM
   output$nordstrom_stars <- renderPlot(
-    nordstrom_df %>% ggplot() + geom_histogram(aes(x=rating), fill="lightyellow") + ggtitle("Nordstrom's Ratings Distribution") + 
+    nordstrom_df %>% ggplot() + geom_histogram(aes(x=rating), fill="gold") + ggtitle("Nordstrom's Ratings Distribution") + 
       xlab("Rating (1-5 Stars)") + ylab("Count")
   )
   
@@ -57,13 +72,20 @@ function(input, output, session){
   )
   
   output$nordstrom_review_count_sans_0 <- renderPlot(
-    nordstrom_df %>% filter(review_count > 0) %>% ggplot() + geom_histogram(binwidth = 1, aes(x=review_count), fill="lightyellow") + 
+    nordstrom_df %>% filter(review_count > 0) %>% ggplot() + geom_histogram(binwidth = 1, aes(x=review_count), fill="gold") + 
       ggtitle("Nordstrom's Review per Product Distribution, (Review Count > 0)") + 
       xlab("Number of Reviews / Product") + ylab("Count") + xlim(0, 70)
   )
   
   output$nordstrom_price <- renderPlot(
-    nordstrom_df %>% ggplot() + geom_histogram(aes(x=price), fill="lightyellow") + ggtitle("Nordstrom's Price Distribution") + 
+    nordstrom_df %>% ggplot() + geom_histogram(aes(x=price), fill="gold") + ggtitle("Nordstrom's Price Distribution") + 
+      xlab("Watch Price") + ylab("Count")
+  )
+  
+  
+  # AMAZON
+  output$amazon_price <- renderPlot(
+    amazon_df %>% ggplot() + geom_histogram(aes(x=price), fill = "lightblue") + ggtitle("Amazon's Price Distribution") + 
       xlab("Watch Price") + ylab("Count")
   )
   

@@ -6,6 +6,7 @@ shinyUI(
           sidebarMenu(
             menuItem("Movado Insight", tabName = "movado", icon = icon("info")),
             menuItem("Retailers",
+              menuSubItem("Overview", tabName = "overview"),
               menuSubItem("Macy's", tabName = "macys"),
               menuSubItem("Nordstrom", tabName = "nordstrom"),
               menuSubItem("Amazon", tabName = "amazon")
@@ -20,9 +21,30 @@ shinyUI(
         tabItems(
           tabItem(tabName = "movado",
                   fluidPage(
-                    fluidRow(box(plotOutput("movado_price")))
+                    h2("Price Distribution"),
+                    fluidRow(box(width = 6, plotOutput("movado_price")), 
+                             column(width = 6, infoBox(width = 10, title = "Average Price", 
+                                                       value = paste0("$", round(mean(movado_df$price), 2))),
+                                    infoBox(width = 10, title = "Median Price", 
+                                            value = paste0("$", round(median(movado_df$price), 2)))
+                                    )
                             )
+                    )
                   ),
+          tabItem(tabName = "overview",
+                  fluidPage(
+                    h1(tags$b("Movado Compared to Retailers")),
+                    h2("Pricing"), br(),
+                    fluidRow(box(width = 6, "Amazon tends to have lower priced products, while Macy's and Movado both have most 
+                                 frequently products priced at $695. However, Macy's average product cost is higher 
+                                 than Movado's. Further investigation will determine if this is because of a tendency 
+                                 to carry more of the higher priced watches of Movado's."), 
+                             box(plotOutput("overview_price"))
+                    ),
+                    h2("Customer Satisfaction")
+                    
+                  )
+          ),
           tabItem(tabName = "macys",
                   fluidPage(
                     h1(tags$b("Macy's Performance")),
@@ -44,8 +66,14 @@ shinyUI(
                     fluidRow(box(align = "center", width = 5, htmlOutput("macys_zero_reviews_pie")), 
                              box(width = 7, plotOutput("macys_review_count_sans_0"))),
                     h2("Price Distribution"),
-                    fluidRow(box(plotOutput("macys_price")))
-                  )
+                    fluidRow(box(width = 6, plotOutput("macys_price")), 
+                            column(width = 6, infoBox(width = 10, title = "Average Price", 
+                                                      value = paste0("$", round(mean(macys_df$price), 2))),
+                                   infoBox(width = 10, title = "Median Price", 
+                                           value = paste0("$", round(median(macys_df$price), 2)))
+                                    )
+                            )
+                      )
                   ),
           tabItem(tabName = "nordstrom",
                   fluidPage(
@@ -69,10 +97,27 @@ shinyUI(
                     fluidRow(box(align = "center", width = 5, htmlOutput("nordstrom_zero_reviews_pie")), 
                              box(width = 7, plotOutput("nordstrom_review_count_sans_0"))),
                     h2("Price Distribution"),
-                    fluidRow(box(plotOutput("nordstrom_price")))
+                    fluidRow(box(width = 6, plotOutput("nordstrom_price")), 
+                             column(width = 6, infoBox(width = 10, title = "Average Price", 
+                                                       value = paste0("$", round(mean(nordstrom_df$price), 2))),
+                                    infoBox(width = 10, title = "Median Price", 
+                                            value = paste0("$", round(median(nordstrom_df$price), 2)))
+                                    )
                             )
+                      )
                   ),
-          tabItem(tabName = "amazon", "AMAZON PAGE"
+          tabItem(tabName = "amazon", 
+                  fluidPage(
+                    h2("Price Distribution"),
+                    fluidRow(box(width = 6, plotOutput("amazon_price")), 
+                             column(width = 6, infoBox(width = 10, title = "Average Price", 
+                                                       value = paste0("$", round(mean(amazon_df$price), 2))),
+                                    infoBox(width = 10, title = "Median Price", 
+                                            value = paste0("$", round(median(amazon_df$price), 2)))
+                                    )
+                            ),
+                    h2("Top Quatity Sellers: Sellers with > # Listings")
+                  )
                   ),
           tabItem(tabName = "tag_heuer", "competition 1"
                   ),
