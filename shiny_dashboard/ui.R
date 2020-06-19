@@ -59,7 +59,9 @@ shinyUI(
                               )
                           ),
                     selectInput("select_model", label = "Select Model:", choices = sort(unique(prices_df$watch_model_movado))),
-                    box(width=12, htmlOutput("price_graph"))
+                    fluidRow(box(width = 6, height=400, title = "Mean Prices Per Retailer", htmlOutput("price_graph")),
+                            box(width = 6, height=400, title = "Price Against Frequency from a Seller", htmlOutput("price_bubble"))
+                    )
                   )
           ),
           tabItem(tabName = "macys",

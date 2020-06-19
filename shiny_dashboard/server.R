@@ -22,6 +22,30 @@ function(input, output, session){
       theme(legend.position="none") + guides(size=FALSE)
   )
   
+  output$price_graph <- renderGvis(
+    prices_df %>% filter(watch_model_movado == input$select_model) %>% 
+      summarise(Movado = mean(price_movado, na.rm = TRUE), "Macy's" = mean(price_macys, na.rm = TRUE), 
+                "Amazon" = mean(price, na.rm = TRUE)) %>% pivot_longer(cols = c("Movado", "Amazon", "Macy's")) %>% 
+      gvisColumnChart(xvar = "name", yvar = "value", 
+                   options=list(width="auto", height="350px", bar = "{groupWidth: '95%'}", 
+                                legend = "{position: 'none'}", colors = "['#55c821']", 
+                                vAxis = "{format: 'currency', title: 'Price'}",
+                                hAxis = "{title: 'Retailer'}"))
+  )
+  
+  output$price_bubble <- renderGvis(
+    prices_df %>% filter(watch_model_movado == input$select_model) %>% 
+      select(Model = watch_model_movado, Movado = price_movado, "Macy's" = price_macys, "Amazon" = price) %>% 
+      pivot_longer(names_to = "Retailer", values_to = "Price", cols = c("Movado", "Amazon", "Macy's")) %>% 
+      mutate(Count = if_else(Retailer == "Movado", sum(Retailer == "Movado" & !is.na(Price)), 
+                            ifelse(Retailer == "Amazon", sum(Retailer == "Amazon" & !is.na(Price)), 
+                                   sum(Retailer == "Macy's" & !is.na(Price))))) %>% 
+      gvisBubbleChart(xvar = "Price", yvar = "Count", colorvar = "Retailer", #sizevar = "Count", 
+                   options=list(width="auto", height="350px", hAxis = "{title: 'Price', format: 'currency'}",
+                                vAxis = "{title: 'Frequency Count'}", vAxis='{minValue:0}',# maxValue:30}', 
+                                 legend = "{position: 'top'}", bubble = "{opacity: .4}"))
+  )
+  
   
   # MACYS
   output$macys_stars <- renderPlot(
