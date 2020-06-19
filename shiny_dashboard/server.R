@@ -27,7 +27,7 @@ function(input, output, session){
       summarise(Movado = mean(price_movado, na.rm = TRUE), "Macy's" = mean(price_macys, na.rm = TRUE), 
                 "Amazon" = mean(price, na.rm = TRUE)) %>% pivot_longer(cols = c("Movado", "Amazon", "Macy's")) %>% 
       gvisColumnChart(xvar = "name", yvar = "value", 
-                   options=list(width="auto", height="350px", bar = "{groupWidth: '95%'}", 
+                   options=list(width="auto", height="330px", bar = "{groupWidth: '95%'}", 
                                 legend = "{position: 'none'}", colors = "['#55c821']", 
                                 vAxis = "{format: 'currency', title: 'Price'}",
                                 hAxis = "{title: 'Retailer'}"))
@@ -44,6 +44,17 @@ function(input, output, session){
                    options=list(width="auto", height="350px", hAxis = "{title: 'Price', format: 'currency'}",
                                 vAxis = "{title: 'Frequency Count'}", vAxis='{minValue:0}',# maxValue:30}', 
                                  legend = "{position: 'top'}", bubble = "{opacity: .4}"))
+  )
+  
+  output$prod_num_graph <- renderGvis(
+    prices_df %>% filter(model_number == input$select_prod_num) %>% 
+      summarise(Movado = mean(price_movado, na.rm = TRUE), "Macy's" = mean(price_macys, na.rm = TRUE), 
+                "Amazon" = mean(price, na.rm = TRUE)) %>% pivot_longer(cols = c("Movado", "Amazon", "Macy's")) %>% 
+      gvisColumnChart(xvar = "name", yvar = "value", 
+                      options=list(width="auto", height="350px", bar = "{groupWidth: '95%'}", 
+                                   legend = "{position: 'none'}", #colors = "['#55c821']", 
+                                   vAxis = "{format: 'currency', title: 'Price'}",
+                                   hAxis = "{title: 'Retailer'}"))
   )
   
   
@@ -74,9 +85,22 @@ function(input, output, session){
       xlab("Number of Reviews / Product") + ylab("Count") + xlim(0, 25)
   )
   
-  output$macys_price <- renderPlot(
-    macys_df %>% ggplot() + geom_histogram(aes(x=price), fill="red") + ggtitle("Macy's Price Distribution") + 
-      xlab("Watch Price") + ylab("Count")
+  # output$macys_price <- renderPlot(
+  #   macys_df %>% ggplot() + geom_histogram(aes(x=price), fill="red") + ggtitle("Macy's Price Distribution") + 
+  #     xlab("Watch Price") + ylab("Count")
+  # )
+  
+  output$combo_macys_price <- renderGvis(
+     macys_df %>% select("Price" = price) %>%
+      gvisHistogram(options=list(width="auto", height="450px", legend = "{position: 'top'}", #colors = "['#55c821']",
+                                 hAxis = "{format: 'currency', title: 'Price'}",
+                                 vAxis = "{title: 'Count'}"))
+    
+    # macys_df %>% group_by(group) %>% summarise(Price = mean(price, na.rm = TRUE), "Product Count" = n(), "Review Count" = sum(review_count)) %>% 
+    #   gvisColumnChart(xvar = "Price", yvar = "Product Count", 
+    #                   options=list(width="auto", height="450px", legend = "{position: 'top'}", #colors = "['#55c821']", 
+    #                                hAxis = "{format: 'currency', title: 'Price'}",
+    #                                vAxis = "{title: 'Count'}"))
   )
   
   # NORDSTROM
@@ -108,9 +132,49 @@ function(input, output, session){
   
   
   # AMAZON
+  output$amazon_stars <- renderPlot(
+    amazon_d_df %>% ggplot() + geom_histogram(aes(x=star), fill="red") + ggtitle("Amazon Ratings Distribution") + 
+      xlab("Rating") + ylab("Count")
+  )
+  
+  output$amazon_zero_reviews_pie <- renderGvis(
+    amazon_d_df %>% transmute(reviewed = ifelse(rev_count > 0, "Yes", "No")) %>% 
+      group_by(reviewed) %>% tally() %>% 
+      gvisPieChart(labelvar = "reviewed", numvar = "n", 
+                   options=list(width="400px", height="350px", 
+                                title = "Amazon's Products With Reviews versus Products Without",
+                                chartArea= "{left:40, top:30, bottom:0, right:0}", 
+                                colors="['#db9081', '#81db92']"))
+  )
+  
+  output$amazon_review_count <- renderPlot(
+    amazon_d_df %>% ggplot() + geom_histogram(aes(x=rev_count), fill="red") + ggtitle("Amazon's Review per Product Distribution") + 
+      xlab("Number of Reviews / Product") + ylab("Count")
+  )
+  
+  output$amazon_review_count_sans_0 <- renderPlot(
+    amazon_d_df %>% filter(rev_count > 0) %>% ggplot() + geom_histogram(binwidth = 1, aes(x=rev_count), fill="red") + 
+      ggtitle("Amazon's Review per Product Distribution, (Review Count > 0)") + 
+      xlab("Number of Reviews / Product") + ylab("Count") + xlim(0, 25)
+  )
+  
   output$amazon_price <- renderPlot(
-    amazon_df %>% ggplot() + geom_histogram(aes(x=price), fill = "lightblue") + ggtitle("Amazon's Price Distribution") + 
+    amazon_d_df %>% ggplot() + geom_histogram(aes(x=price), fill = "lightblue") + ggtitle("Amazon's Price Distribution") + 
       xlab("Watch Price") + ylab("Count")
+  )
+  
+  
+  output$seller_table <- renderDataTable(
+    datatable(data, escape = -2, # raw HTML in column 2
+    options = list(
+      columnDefs = list(
+        list(visible = FALSE, targets = c(0,nested_columns) ), # Hide row numbers and nested columns
+        list(orderable = FALSE, className = 'details-control', targets = 1) # turn first column into control column
+      )), callback = JS(callback))
+  )
+  
+  output$watches_table <- renderDataTable(
+    amazon_df %>% group_by(product) %>% summarize(count = n()) %>% arrange(., -count)
   )
   
 }

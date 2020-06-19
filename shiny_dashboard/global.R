@@ -4,6 +4,7 @@ library(DT)
 library(lubridate)
 library(ggthemes)
 library(googleVis)
+library(mltools)
 
 
 ### DEFINE CLEANING FUNCTIONS ###
@@ -142,13 +143,14 @@ nordstrom_df["movement"] <- sapply(nordstrom_df$watch_model, collect_movement)
 
 amazon_df <- read.csv("data/amazonsellers copy.csv", stringsAsFactors = FALSE) %>% 
   mutate(price = as.numeric(gsub(",|\\$", "", price))) %>% 
+  mutate(code = trimws(code)) %>% 
   mutate(model_number = trimws(code)) %>% 
   mutate(q_count = ifelse(q_count == "", 0, as.numeric(gsub(" answered questions| answered question", "", trimws(q_count))))) %>% 
   mutate(star = as.numeric(unlist(lapply(strsplit(star, " "), '[[', 1)))) %>% 
   mutate(rev_count = ifelse(rev_count == "", 0, as.numeric(gsub(" ratings| rating", "", rev_count))))
 amazon_df["gender"] <- sapply(amazon_df$product, collect_gender)
 amazon_df["collection"] <- sapply(amazon_df$product, collect_collection)
-
+amazon_d_df <- amazon_df %>% distinct(., code, .keep_all = TRUE)
 
 prices_df <- left_join(select(movado_df, "model_number", "watch_model", "price"), 
                      select(macys_df, "model_number", "price", "watch_model"), by= "model_number", suffix = c("_movado", "_macys")) %>% 
@@ -162,7 +164,79 @@ prices_df$difference <- if_else(is.na(prices_df$price_macys) & is.na(prices_df$p
 
 max_diff <- prices_df[prices_df["difference"] == max(prices_df$difference, na.rm = TRUE), ]
 sec_diff <- prices_df[prices_df["difference"] == sort(prices_df$difference, decreasing=TRUE)[2], ]
+thrd_diff <- prices_df[prices_df["difference"] == sort(prices_df$difference, decreasing=TRUE)[3], ]
 
 
+macys_df$group <-cut(macys_df$price, seq(100, 3000, by=100), labels = FALSE)
+
+gs = amazon_df %>% group_by(seller) %>% mutate(., count = n())
+ungroup(gs)
+
+amazon_dt <- gs %>% 
+  select(seller, count, product, everything()) %>% 
+  nest(-seller, -count)
+
+data <- amazon_dt %>% {bind_cols(data_frame(' ' = rep('&oplus;',nrow(.))),.)}
+
+# get dynamic info and strings
+nested_columns         <- which(sapply(data,class)=="list") %>% setNames(NULL)
+not_nested_columns     <- which(!(seq_along(data) %in% c(1,nested_columns)))
+not_nested_columns_str <- not_nested_columns %>% paste(collapse="] + '_' + d[") %>% paste0("d[",.,"]")
+
+
+# The callback
+# turn rows into child rows and remove from parent
+callback <- paste0("
+                    table.column(1).nodes().to$().css({cursor: 'pointer'});
+                
+                    // Format data object (the nested table) into another table
+                    var format = function(d) {
+                      if(d != null){ 
+                        var result = ('<table id=\"child_' + ",not_nested_columns_str," + '\">').replace('.','_') + '<thead><tr>'
+                        for (var col in d[",nested_columns,"]){
+                          result += '<th>' + col + '</th>'
+                        }
+                        result += '</tr></thead></table>'
+                        return result
+                      }else{
+                        return '';
+                      }
+                    }
+                
+                    var format_datatable = function(d) {
+                      var dataset = [];
+                      for (i = 0; i < + d[",nested_columns,"]['product'].length; i++) {
+                        var datarow = [];
+                        for (var col in d[",nested_columns,"]){
+                          datarow.push(d[",nested_columns,"][col][i])
+                        }
+                        dataset.push(datarow)
+                      }
+                      var subtable = $(('table#child_' + ",not_nested_columns_str,").replace('.','_')).DataTable({
+                        'data': dataset,
+                        'autoWidth': true, 
+                        'deferRender': true, 
+                        'info': false, 
+                        'lengthChange': false, 
+                        'ordering': true, 
+                        'paging': false, 
+                        'scrollX': false, 
+                        'scrollY': false, 
+                        'searching': false 
+                      });
+                    };
+                
+                    table.on('click', 'td.details-control', function() {
+                      var td = $(this), row = table.row(td.closest('tr'));
+                      if (row.child.isShown()) {
+                        row.child.hide();
+                        td.html('&oplus;');
+                      } else {
+                        row.child(format(row.data())).show();
+                        td.html('&CircleMinus;');
+                        format_datatable(row.data())
+                      }
+                    });"
+)
 
 
