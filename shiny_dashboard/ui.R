@@ -34,15 +34,32 @@ shinyUI(
           tabItem(tabName = "overview",
                   fluidPage(
                     h1(tags$b("Movado Compared to Retailers")),
-                    h2("Pricing"), br(),
+                    h2("Overall Pricing"), br(),
                     fluidRow(box(width = 6, "Amazon tends to have lower priced products, while Macy's and Movado both have most 
                                  frequently products priced at $695. However, Macy's average product cost is higher 
                                  than Movado's. Further investigation will determine if this is because of a tendency 
                                  to carry more of the higher priced watches of Movado's."), 
                              box(plotOutput("overview_price"))
                     ),
-                    h2("Customer Satisfaction")
-                    
+                    h2("Individual Product Pricing"),
+                    h3("Largest Price Discrepancies"),
+                    fluidRow(
+                      infoBox(fill = TRUE, color = "red", icon = icon("danger"), width = 4, title = "Largest Discount", value = paste0("$", max(prices_df$difference, na.rm = TRUE)),
+                                              subtitle = paste(ifelse(min(max_diff[c("price", "price_macys")]) == max_diff[["price"]], "Amazon,", "Macy's,"), max_diff[["watch_model_movado"]])),
+                      infoBox(fill = TRUE, color = "red", icon = icon("danger"), width = 4, title = "2nd Largest Discount", value = paste0("$", sort(prices_df$difference, decreasing=TRUE)[2]),
+                                                subtitle = paste(ifelse(min(sec_diff[c("price", "price_macys")]) == sec_diff[["price"]], "Amazon,", "Macy's,"), sec_diff[["watch_model_movado"]])),
+                          ),
+                    h3("Discrepancies by Retailer"),
+                    fluidRow(
+                      valueBox(color = "yellow", width = 4, subtitle = "Average Macy's Discount", 
+                               value = paste0("$", mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price_macys"], na.rm = TRUE))
+                              ),
+                      valueBox(color = "yellow", width = 4, subtitle = "Average Amazon Discount", 
+                             value = paste0("$", round(mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price"], na.rm = TRUE), 2))
+                              )
+                          ),
+                    selectInput("select_model", label = "Select Model:", choices = sort(unique(prices_df$watch_model_movado))),
+                    box(width=12, htmlOutput("price_graph"))
                   )
           ),
           tabItem(tabName = "macys",

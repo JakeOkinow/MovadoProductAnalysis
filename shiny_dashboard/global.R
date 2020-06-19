@@ -8,24 +8,17 @@ library(googleVis)
 
 ### DEFINE CLEANING FUNCTIONS ###
 
-collect_gender <- function(X){
-  for (item in X){
-    v <- c()
-    m <- regexpr("wom.n'?s?|ladies", item, perl=TRUE, ignore.case = TRUE)
-    n <- regexpr(" m.n'?s?|^m.n'?s? ", item, perl=TRUE, ignore.case = TRUE)
-    o <- regexpr("unisex", item, perl=TRUE, ignore.case = TRUE)
-    if (m[1] != -1){
-      v <- c(v, "Women's")
-    }else if (n[1] != -1){
-      v <- c(v, "Men's")
-    } else if (o[1] != -1){
-      v <- c(v, regmatches(item, o))
-    } else{
-      v <- c(v, "unknown")
-    }
-  } 
-  return(v)
-}
+collect_gender <- function(x){
+  m <- regexpr("wom.n'?s?|ladies", x, perl=TRUE, ignore.case = TRUE)
+  n <- regexpr(" m.n'?s?|^m.n'?s? ", x, perl=TRUE, ignore.case = TRUE)
+  o <- regexpr("unisex", x, perl=TRUE, ignore.case = TRUE)
+  if (m[1] != -1){
+    return("Women's")
+  }else if (n[1] != -1){
+    return("Men's")
+  } else if (o[1] != -1){
+    return("Unisex")
+  } else{return("Unknown")}}
 
 
 collect_model_num <- function(x, y){
@@ -36,23 +29,14 @@ collect_model_num <- function(x, y){
     } else if (n[1] != -1){
       return(regmatches(y, n))
     } else {
-      return("Unknown")
-    } 
-}
+      return("Unknown")}}
 
 
-collect_case_diameter <- function(X){
-  for (item in X){
-    v <- c()
-    m <- regexpr("\\d{2}mm", item, perl=FALSE, fixed=FALSE)
-    if (m[1] != -1){
-      v <- c(v, regmatches(item, m))
-    } else {
-      v <- c(v, "Unknown")
-    }
-  } 
-  return(trimws(v))
-}
+collect_case_diameter <- function(x){
+  m <- regexpr("\\d{2}mm", x, perl=FALSE, fixed=FALSE)
+  if (m[1] != -1){return(as.numeric(gsub("mm", "", regmatches(x, m))))
+  } else {return("Unknown")}}
+
 
 collect_crystal <- function(x){
    m <- regexpr("k.?1|sapphire|gorilla glass|crystal", x, ignore.case = TRUE, perl=FALSE, fixed=FALSE)
@@ -73,33 +57,62 @@ collect_dial <- function(x){
 }
 
 
-collect_collection <- function(X){
-  for (item in X){
-    v <- c()
-    item = str_to_lower(item)
-    m <- regexpr("movado bold|meusem classic|connect 2.0", item, perl=FALSE, fixed=FALSE)
-    p <- regexpr("movado ultra slim|modern 47|movado face", item, perl=FALSE, fixed=FALSE)
-    s <- regexpr("heritage series|musem sport|series 800", item, perl=FALSE, fixed=FALSE)
-    w <- regexpr("esperanze|sapphire|red label", item, perl=FALSE, fixed=FALSE)
-    z <- regexpr("faceto|kora|la nouvelle", item, perl=FALSE, fixed=FALSE)
-    c <- regexpr("vizio|strato|1881 auotmatic", item, perl=FALSE, fixed=FALSE)
-    if (m[1] != -1){
-      v <- c(v, regmatches(item, m))
-    } else if (p[1] != -1){
-      v <- c(v, regmatches(item, p))
-    } else if (s[1] != -1){
-      v <- c(v, regmatches(item, s))
-    } else if (w[1] != -1){
-      v <- c(v, regmatches(item, w))
-    } else if (z[1] != -1){
-      v <- c(v, regmatches(item, z))
-    } else if (c[1] != -1){
-      v <- c(v, regmatches(item, c))
-    }  else {
-      v <- c(v, "Unknown")
-    }
-  } 
-  return(v)
+collect_collection <- function(x){
+  x = str_to_lower(x)
+  m <- regexpr("movado bold|meusem classic|connect 2.0", x, perl=FALSE, fixed=FALSE)
+  p <- regexpr("movado ultra slim|modern 47|movado face", x, perl=FALSE, fixed=FALSE)
+  s <- regexpr("heritage series|musem sport|series 800", x, perl=FALSE, fixed=FALSE)
+  w <- regexpr("esperanze|sapphire|red label", x, perl=FALSE, fixed=FALSE)
+  z <- regexpr("faceto|kora|la nouvelle", x, perl=FALSE, fixed=FALSE)
+  c <- regexpr("vizio|strato|1881 auotmatic", x, perl=FALSE, fixed=FALSE)
+  if (m[1] != -1){
+    return(regmatches(x, m))
+  } else if (p[1] != -1){
+   return(regmatches(x, p))
+  } else if (s[1] != -1){
+    return(regmatches(x, s))
+  } else if (w[1] != -1){
+    return(regmatches(x, w))
+  } else if (z[1] != -1){
+    return(regmatches(x, z))
+  } else if (c[1] != -1){
+    return(regmatches(x, c))
+  }  else {return("Unknown")}}
+
+
+collect_collection_nordstrom <- function(x){
+  x = str_to_lower(x)
+  m <- regexpr("heritage", x, perl=FALSE, fixed=FALSE)
+  n <- regexpr("amorosa", x, perl=FALSE, fixed=FALSE)
+  o <- regexpr("bold ceramic", x, perl=FALSE, fixed=FALSE)
+  p <- regexpr("connect", x, perl=FALSE, fixed=FALSE)
+  q <- regexpr("bold evolution", x, perl=FALSE, fixed=FALSE)
+  r <- regexpr("bold fusion", x, perl=FALSE, fixed=FALSE)
+  s <- regexpr("esperanza", x, perl=FALSE, fixed=FALSE)
+  t <- regexpr("museum sport", x, perl=FALSE, fixed=FALSE)
+  w <- regexpr("museum classic", x, perl=FALSE, fixed=FALSE)
+  z <- regexpr("sapphire", x, perl=FALSE, fixed=FALSE)
+  if (m[1] != -1){ return("Movado Heritage Series")
+  } else if (n[1] != -1){ return("Amorosa")
+  } else if (o[1] != -1){ return("Movado BOLD Ceramic")
+  } else if (p[1] != -1){ return(paste(last(unlist(strsplit(x, " "))), "Movado Connect 2.0"))
+  } else if (q[1] != -1){ return("Movado BOLD Evolution")
+  } else if (r[1] != -1){ return("Movado BOLD Fusion")
+  } else if (s[1] != -1){ return("Esperanza")
+  } else if (t[1] != -1){ return("Museum Sport")
+  } else if (w[1] != -1){ return("Museum Classic")
+  } else if (z[1] != -1){ return("Sapphire")
+  } else {return("Unknown")}
+}
+
+collect_movement <- function(x){
+  m <- regexpr("connect", x, ignore.case = TRUE, perl=FALSE, fixed=FALSE)
+  n <- regexpr("1881 automatic|red label", x, ignore.case = TRUE, perl=FALSE, fixed=FALSE)
+  o <- regexpr("chronograph", x, ignore.case = TRUE, perl=FALSE, fixed=FALSE)
+  if (m[1] != -1){ return("Smart module")
+  } else if (n[1] != -1){ return(regmatches(x, n))
+  } else if (o[1] != -1){ return("Swiss quartz chronograph movement")
+  } else {return("Swiss quartz movement")}
 }
 
 
@@ -111,6 +124,7 @@ macys_df <- read.csv("data/macys_website.csv", stringsAsFactors = FALSE)  %>%
 macys_df["gender"] <- sapply(macys_df$watch_model, collect_gender)
 macys_df["case_diameter"] <- sapply(macys_df$watch_model, collect_case_diameter)
 macys_df["model_number"] <- mapply(collect_model_num, macys_df$description, y=macys_df$watch_model)
+macys_df <- macys_df %>% mutate(model_number = gsub("^0", "", model_number))
 macys_5_rating <- nrow(macys_df[macys_df["rating"] == 100 & !is.na(macys_df["rating"]), ])
 
 movado_df <- read.csv("data/movado_website.csv", stringsAsFactors = FALSE)  %>% 
@@ -123,6 +137,8 @@ nordstrom_5_rating <- nrow(nordstrom_df[nordstrom_df["rating"] == 5 & !is.na(nor
 nordstrom_df["case_diameter"] <- sapply(nordstrom_df$watch_model, collect_case_diameter)
 nordstrom_df["crystal"] <- sapply(nordstrom_df$bullet_details, collect_crystal)
 nordstrom_df["dial"] <- trimws(sapply(nordstrom_df$description, collect_dial, simplify = TRUE, USE.NAMES = FALSE))
+nordstrom_df["collection"] <- sapply(nordstrom_df$watch_model, collect_collection_nordstrom)
+nordstrom_df["movement"] <- sapply(nordstrom_df$watch_model, collect_movement)
 
 amazon_df <- read.csv("data/amazonsellers copy.csv", stringsAsFactors = FALSE) %>% 
   mutate(price = as.numeric(gsub(",|\\$", "", price))) %>% 
@@ -134,4 +150,19 @@ amazon_df["gender"] <- sapply(amazon_df$product, collect_gender)
 amazon_df["collection"] <- sapply(amazon_df$product, collect_collection)
 
 
-test_df <- full_join(select(movado_df, -"online_exclusive", -"in_stock"), nordstrom_df, by="model_number")
+prices_df <- left_join(select(movado_df, "model_number", "watch_model", "price"), 
+                     select(macys_df, "model_number", "price", "watch_model"), by= "model_number", suffix = c("_movado", "_macys")) %>% 
+  left_join(select(amazon_df, "model_number", "price","product"),  by= "model_number")
+
+prices_df$difference <- if_else(is.na(prices_df$price_macys) & is.na(prices_df$price), 0,
+                                ifelse(is.na(prices_df$price_macys), (prices_df$price_movado - prices_df$price), 
+                                       ifelse(is.na(prices_df$price), (prices_df$price_movado - prices_df$price_macys),
+                                      ifelse(prices_df$price < prices_df$price_macys, (prices_df$price_movado - prices_df$price), 
+                                (prices_df$price_movado - prices_df$price_macys)))))
+
+max_diff <- prices_df[prices_df["difference"] == max(prices_df$difference, na.rm = TRUE), ]
+sec_diff <- prices_df[prices_df["difference"] == sort(prices_df$difference, decreasing=TRUE)[2], ]
+
+
+
+
