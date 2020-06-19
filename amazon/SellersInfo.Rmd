@@ -23,6 +23,8 @@ df
 
 ```{r}
 
+
+
 ```
 
 CLEAN DATA WITH THIS SQUARE
@@ -32,15 +34,16 @@ df <- df %>% mutate(., code = trimws(as.character(code)))
 df <- df %>% mutate(., q_count = trimws(as.character(q_count)))
 df <- df %>% mutate(., q_count = gsub(" answered questions", "", q_count))
 
-df <- df %>% mutate(., rev_count = gsub(" ratings", "", rev_count))
+df <- df %>% mutate(., rev_count = gsub(" ratings| rating", "", rev_count))
 
 df <- df %>% mutate(., q_count = ifelse(q_count == "", 0, q_count))
 
-df <- df %>% mutate(., rev_count = ifelse(rev_count == "", 0, rev_count))
+df <- df %>% mutate(., rev_count = as.numeric(ifelse(rev_count == "", 0, rev_count)))
 
 
 df <- df %>% mutate(., star = as.character(star))
 df <- df %>% mutate(., star = ifelse(nchar(star) < 5,"0.0 out of 5 stars", ifelse(nchar(star) > 18, "0.0 out of 5 stars", star )))
+df <- df %>% mutate(., star = as.numeric(gsub(" out of 5 stars", "", star)))
 
 df <- df %>% mutate(., price = as.numeric(gsub(",", "", substring(as.character(price), 2))))
 
@@ -57,20 +60,145 @@ dff <- df %>% mutate(., price = as.numeric(gsub(",", "", substring(as.character(
 ```
 
 ```{r}
-gs = dff %>% group_by(seller) %>% summarize(count = n()) %>% filter(., count > 2)
-gp = dff %>% group_by(product) %>% summarize(count = n()) %>% filter(., count > 1)
+gs = df %>% group_by(seller) %>% summarize(count = n()) %>% filter(., count > 1)%>% arrange(., -count)
+gp = df %>% group_by(product) %>% summarize(count = n()) %>% filter(., count > 1) %>% arrange(., -count)
 
 gs
 gp
 
 dff
-distinct(dff)
+distinct(df)
 
 ```
 
+```{r}
+dff <- df %>% distinct(., code, .keep_all = TRUE)
+dff
+which.max(dff$rev_count)
+max(dff$rev_count)
+sum(dff$rev_count == 0.0)/nrow(dff)
+```
+
+
 
 ```{r}
-dff %>% filter(., code == 3660029)
+df %>% filter(., seller == "Todays Deals")
+```
+
+```{r}
+gs = df %>% group_by(seller) %>% mutate(., count = n())
+
+
+df_dt <- gs %>% 
+  select(seller, count, product, everything()) %>% 
+  nest()
+
+dat <- df_dt %>% {bind_cols(data_frame(' ' = rep('&oplus;',nrow(.))),.)}
+
+# get dynamic info and strings
+nested_columns         <- which(sapply(dat,class)=="list") %>% setNames(NULL)
+not_nested_columns     <- which(!(seq_along(dat) %in% c(1,nested_columns)))
+not_nested_columns_str <- not_nested_columns %>% paste(collapse="] + '_' + d[") %>% paste0("d[",.,"]")
+
+df_dt
+dat
+nested_columns
+not_nested_columns
+not_nested_columns_str
+
+
+# The callback
+# turn rows into child rows and remove from parent
+callback <- paste0("
+                    table.column(1).nodes().to$().css({cursor: 'pointer'});
+                
+                    // Format data object (the nested table) into another table
+                    var format = function(d) {
+                      if(d != null){ 
+                        var result = ('<table id=\"child_' + ",not_nested_columns_str," + '\">').replace('.','_') + '<thead><tr>'
+                        for (var col in d[",nested_columns,"]){
+                          result += '<th>' + col + '</th>'
+                        }
+                        result += '</tr></thead></table>'
+                        return result
+                      }else{
+                        return '';
+                      }
+                    }
+                
+                    var format_datatable = function(d) {
+                      var dataset = [];
+                      for (i = 0; i < + d[",nested_columns,"]['product'].length; i++) {
+                        var datarow = [];
+                        for (var col in d[",nested_columns,"]){
+                          datarow.push(d[",nested_columns,"][col][i])
+                        }
+                        dataset.push(datarow)
+                      }
+                      var subtable = $(('table#child_' + ",not_nested_columns_str,").replace('.','_')).DataTable({
+                        'data': dataset,
+                        'autoWidth': true, 
+                        'deferRender': true, 
+                        'info': false, 
+                        'lengthChange': false, 
+                        'ordering': true, 
+                        'paging': false, 
+                        'scrollX': false, 
+                        'scrollY': false, 
+                        'searching': false 
+                      });
+                    };
+                
+                    table.on('click', 'td.details-control', function() {
+                      var td = $(this), row = table.row(td.closest('tr'));
+                      if (row.child.isShown()) {
+                        row.child.hide();
+                        td.html('&oplus;');
+                      } else {
+                        row.child(format(row.data())).show();
+                        td.html('&CircleMinus;');
+                        format_datatable(row.data())
+                      }
+                    });"
+)
+
+
+datatable(
+  dat,
+  escape = -2, # raw HTML in column 2
+  options = list(
+    columnDefs = list(
+      list(visible = FALSE, targets = c(0,nested_columns) ), # Hide row numbers and nested columns
+      list(orderable = FALSE, className = 'details-control', targets = 1) # turn first column into control column
+    )
+  ),
+  callback = JS(callback)
+)
+```
+
+```{r}
+
+mtcars
+mtcars_dt <- mtcars %>% 
+                        rownames_to_column("model") %>% 
+                        as_data_frame %>% 
+                        select(mpg, cyl, everything()) %>% 
+                        nest(-mpg, -cyl)
+
+
+# add control column
+data <- mtcars_dt %>% {bind_cols(data_frame(' ' = rep('&oplus;',nrow(.))),.)}
+
+# get dynamic info and strings
+nested_columns         <- which(sapply(data,class)=="list") %>% setNames(NULL)
+not_nested_columns     <- which(!(seq_along(data) %in% c(1,nested_columns)))
+not_nested_columns_str <- not_nested_columns %>% paste(collapse="] + '_' + d[") %>% paste0("d[",.,"]")
+
+mtcars_dt
+data
+nested_columns
+not_nested_columns
+not_nested_columns_str
 ```
 
 

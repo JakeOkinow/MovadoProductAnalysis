@@ -106,19 +106,41 @@ shinyUI(
                             )
                       )
                   ),
+          ####AMAZON COPY PASTE######
           tabItem(tabName = "amazon", 
                   fluidPage(
+                    h1(tags$b("Amazon's Performance")),
+                    h2("Customer Satisfation: Ratings Distribution"), br(),
+                    fluidRow(box(width = 6, plotOutput("amazon_stars")),
+                             column(width = 6, infoBox(width = 10, title="Total 5-Star-Rated Products",
+                                                       subtitle = paste0(round(100*sum(amazon_d_df$star == 5.0)/nrow(amazon_d_df)), "% of products listed on Amazon's"),
+                                                       fill = TRUE, value = sum(amazon_d_df$star == 5.0)),
+                                    infoBox(width = 10, color = "yellow", title = "Total Unrated Products", value = sum(amazon_d_df$star == 0.0),
+                                            subtitle = paste0(round(100*sum(amazon_d_df$star == 0.0)/nrow(amazon_d_df)), "% of products listed on Amazon's"))
+                             )
+                    ),
+                    h2("Reviews: Presence and Distribution"), br(),
+                    fluidRow(box(width = 4, p("text text text text text text text")),
+                             column(width = 8, infoBox(width = 12, fill = TRUE, title = "Most Reviewed Product", value = amazon_df$product[which.max(amazon_df$rev_count)],
+                                                       subtitle = paste(max(amazon_d_df$rev_count), "total reviews"))
+                             )
+                    ),
+                    fluidRow(box(align = "center", width = 5, htmlOutput("amazon_zero_reviews_pie")), 
+                             box(width = 7, plotOutput("amazon_review_count_sans_0"))),
                     h2("Price Distribution"),
                     fluidRow(box(width = 6, plotOutput("amazon_price")), 
                              column(width = 6, infoBox(width = 10, title = "Average Price", 
-                                                       value = paste0("$", round(mean(amazon_df$price), 2))),
+                                                       value = paste0("$", round(mean(amazon_d_df$price), 2))),
                                     infoBox(width = 10, title = "Median Price", 
-                                            value = paste0("$", round(median(amazon_df$price), 2)))
-                                    )
-                            ),
-                    h2("Top Quatity Sellers: Sellers with > # Listings")
+                                            value = paste0("$", round(median(amazon_d_df$price), 2)))
+                             )
+                    ),
+                    h2("seller list and number of listings"), br(),
+                    fluidRow(dataTableOutput("seller_table")),
+                    h2("Watch list and number of sellers"), br(),
+                    fluidRow(dataTableOutput("watches_table"))
                   )
-                  ),
+          ), #AMAZON COPY PASTE
           tabItem(tabName = "tag_heuer", "competition 1"
                   ),
           tabItem(tabName = "other", "competition 2")

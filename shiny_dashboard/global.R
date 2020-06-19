@@ -4,6 +4,9 @@ library(DT)
 library(lubridate)
 library(ggthemes)
 library(googleVis)
+library(tibble)
+library(dplyr)
+library(tidyr)
 
 
 ### DEFINE CLEANING FUNCTIONS ###
@@ -79,7 +82,7 @@ collect_collection <- function(X){
 macys_df <- read.csv("data/macys_website.csv", stringsAsFactors = FALSE)  %>% 
   mutate(rating = as.numeric(gsub("%", "", rating))) %>%
   mutate(price = gsub("Orig. |Now |Sale |,", "", price)) %>% mutate(price = as.numeric(substr(price, 2, nchar(price))))
-macys_df["gender"] <- sapply(macys_df$watch_model, collect_gender)
+#macys_df["gender"] <- sapply(macys_df$watch_model, collect_gender)
 macys_5_rating <- nrow(macys_df[macys_df["rating"] == 100 & !is.na(macys_df["rating"]), ])
 
 movado_df <- read.csv("data/movado_website.csv", stringsAsFactors = FALSE)  %>% 
@@ -90,11 +93,98 @@ nordstrom_df <- read.csv("data/nordstrom_website.csv", stringsAsFactors = FALSE)
   mutate(price = gsub(",", "", price)) %>% mutate(price = as.numeric(substr(price, 2, nchar(price))))
 nordstrom_5_rating <- nrow(nordstrom_df[nordstrom_df["rating"] == 5 & !is.na(nordstrom_df["rating"]), ])
 
-amazon_df <- read.csv("data/amazonsellerssecond copy.csv", stringsAsFactors = FALSE) %>% 
+
+
+#AMAZON COPY PASTE
+
+amazon_df <- read.csv("data/amazonsellers.csv", stringsAsFactors = FALSE) %>% 
   mutate(price = gsub(",|$", "", price)) %>% mutate(price = as.numeric(substr(price, 2, nchar(price))))
 amazon_df["gender"] <- sapply(amazon_df$product, collect_gender)
 amazon_df["model_number"] <- sapply(amazon_df$product, collect_model_num)
 amazon_df["collection"] <- sapply(amazon_df$product, collect_collection)
+amazon_df <- amazon_df %>% mutate(., code = trimws(as.character(code)))
+amazon_df <- amazon_df %>% mutate(., q_count = trimws(as.character(q_count)))
+amazon_df <- amazon_df %>% mutate(., q_count = gsub(" answered questions", "", q_count))
+amazon_df <- amazon_df %>% mutate(., rev_count = gsub(" ratings| rating", "", rev_count))
+amazon_df <- amazon_df %>% mutate(., q_count = ifelse(q_count == "", 0, q_count))
+amazon_df <- amazon_df %>% mutate(., rev_count = as.numeric(ifelse(rev_count == "", 0, rev_count)))
+amazon_df <- amazon_df %>% mutate(., star = as.character(star))
+amazon_df <- amazon_df %>% mutate(., star = ifelse(nchar(star) < 5,"0.0 out of 5 stars", ifelse(nchar(star) > 18, "0.0 out of 5 stars", star )))
+amazon_df <- amazon_df %>% mutate(., star = as.numeric(gsub(" out of 5 stars", "", star)))
+amazon_d_df <- amazon_df %>% distinct(., code, .keep_all = TRUE)
+
+gs = amazon_df %>% group_by(seller) %>% mutate(., count = n())
+ungroup(gs)
+
+amazon_dt <- gs %>% 
+  select(seller, count, product, everything()) %>% 
+  nest(-seller, -count)
+
+data <- amazon_dt %>% {bind_cols(data_frame(' ' = rep('&oplus;',nrow(.))),.)}
+
+# get dynamic info and strings
+nested_columns         <- which(sapply(data,class)=="list") %>% setNames(NULL)
+not_nested_columns     <- which(!(seq_along(data) %in% c(1,nested_columns)))
+not_nested_columns_str <- not_nested_columns %>% paste(collapse="] + '_' + d[") %>% paste0("d[",.,"]")
 
 
-test_df <- full_join(select(movado_df, -"online_exclusive", -"in_stock"), amazon_df, by="model_number")
+# The callback
+# turn rows into child rows and remove from parent
+callback <- paste0("
+                    table.column(1).nodes().to$().css({cursor: 'pointer'});
+                
+                    // Format data object (the nested table) into another table
+                    var format = function(d) {
+                      if(d != null){ 
+                        var result = ('<table id=\"child_' + ",not_nested_columns_str," + '\">').replace('.','_') + '<thead><tr>'
+                        for (var col in d[",nested_columns,"]){
+                          result += '<th>' + col + '</th>'
+                        }
+                        result += '</tr></thead></table>'
+                        return result
+                      }else{
+                        return '';
+                      }
+                    }
+                
+                    var format_datatable = function(d) {
+                      var dataset = [];
+                      for (i = 0; i < + d[",nested_columns,"]['product'].length; i++) {
+                        var datarow = [];
+                        for (var col in d[",nested_columns,"]){
+                          datarow.push(d[",nested_columns,"][col][i])
+                        }
+                        dataset.push(datarow)
+                      }
+                      var subtable = $(('table#child_' + ",not_nested_columns_str,").replace('.','_')).DataTable({
+                        'data': dataset,
+                        'autoWidth': true, 
+                        'deferRender': true, 
+                        'info': false, 
+                        'lengthChange': false, 
+                        'ordering': true, 
+                        'paging': false, 
+                        'scrollX': false, 
+                        'scrollY': false, 
+                        'searching': false 
+                      });
+                    };
+                
+                    table.on('click', 'td.details-control', function() {
+                      var td = $(this), row = table.row(td.closest('tr'));
+                      if (row.child.isShown()) {
+                        row.child.hide();
+                        td.html('&oplus;');
+                      } else {
+                        row.child(format(row.data())).show();
+                        td.html('&CircleMinus;');
+                        format_datatable(row.data())
+                      }
+                    });"
+)
+
+#AMAZON COPY PASTE
+
+
+
+#test_df <- full_join(select(movado_df, -"online_exclusive", -"in_stock"), amazon_df, by="model_number")

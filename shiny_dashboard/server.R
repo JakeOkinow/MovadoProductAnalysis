@@ -83,10 +83,58 @@ function(input, output, session){
   )
   
   
-  # AMAZON
+  # AMAZON COPY PASTE #
+  
+  output$amazon_stars <- renderPlot(
+    amazon_d_df %>% ggplot() + geom_histogram(aes(x=star), fill="red") + ggtitle("Amazon Ratings Distribution") + 
+      xlab("Rating") + ylab("Count")
+  )
+  
+  output$amazon_zero_reviews_pie <- renderGvis(
+    amazon_d_df %>% transmute(reviewed = ifelse(rev_count > 0, "Yes", "No")) %>% 
+      group_by(reviewed) %>% tally() %>% 
+      gvisPieChart(labelvar = "reviewed", numvar = "n", 
+                   options=list(width="400px", height="350px", 
+                                title = "Amazon's Products With Reviews versus Products Without",
+                                chartArea= "{left:40, top:30, bottom:0, right:0}", 
+                                colors="['#db9081', '#81db92']"))
+  )
+  
+  output$amazon_review_count <- renderPlot(
+    amazon_d_df %>% ggplot() + geom_histogram(aes(x=rev_count), fill="red") + ggtitle("Amazon's Review per Product Distribution") + 
+      xlab("Number of Reviews / Product") + ylab("Count")
+  )
+  
+  output$amazon_review_count_sans_0 <- renderPlot(
+    amazon_d_df %>% filter(rev_count > 0) %>% ggplot() + geom_histogram(binwidth = 1, aes(x=rev_count), fill="red") + 
+      ggtitle("Amazon's Review per Product Distribution, (Review Count > 0)") + 
+      xlab("Number of Reviews / Product") + ylab("Count") + xlim(0, 25)
+  )
+  
   output$amazon_price <- renderPlot(
-    amazon_df %>% ggplot() + geom_histogram(aes(x=price), fill = "lightblue") + ggtitle("Amazon's Price Distribution") + 
+    amazon_d_df %>% ggplot() + geom_histogram(aes(x=price), fill = "lightblue") + ggtitle("Amazon's Price Distribution") + 
       xlab("Watch Price") + ylab("Count")
   )
+  
+  
+  output$seller_table <- renderDataTable(datatable(
+    
+    data,
+    escape = -2, # raw HTML in column 2
+    options = list(
+      columnDefs = list(
+        list(visible = FALSE, targets = c(0,nested_columns) ), # Hide row numbers and nested columns
+        list(orderable = FALSE, className = 'details-control', targets = 1) # turn first column into control column
+      )
+    ),
+    callback = JS(callback)
+
+  ))
+  
+  output$watches_table <- renderDataTable(
+    amazon_df %>% group_by(product) %>% summarize(count = n()) %>% arrange(., -count)
+  )
+  
+  #####AMAZON COPY PASTE#########
   
 }
