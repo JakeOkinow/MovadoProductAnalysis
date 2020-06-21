@@ -1,7 +1,7 @@
 
 function(input, output, session){
-  
-  # MOVADO
+
+    # MOVADO
   output$movado_price <- renderPlot(
     movado_df %>% ggplot() + geom_histogram(aes(x=price), fill="skyblue") + ggtitle("Movado's Price Distribution") + 
       xlab("Watch Price") + ylab("Count")
@@ -10,16 +10,16 @@ function(input, output, session){
   
   # OVERVIEW
   output$overview_price <- renderPlot(
-    cbind("Mean Prices" = c(round(mean(movado_df$price), 2), round(mean(macys_df$price), 2), 
+    data.frame("Mean Prices" = c(round(mean(movado_df$price), 2), round(mean(macys_df$price), 2), 
                             round(mean(nordstrom_df$price), 2), round(mean(amazon_df$price), 2)),
           "Median Prices" = c(round(median(movado_df$price), 2), round(median(macys_df$price), 2), 
                               round(median(nordstrom_df$price), 2), round(median(amazon_df$price), 2)),
           "Seller"=c("Movado", "Macy's", "Nordstrom", "Amazon")) %>% 
-      data.frame() %>% 
-      ggplot(aes(x = Median.Prices, y=Mean.Prices, color=Seller)) + geom_point(size=9) + 
-      geom_text(aes(label=Seller), vjust=-2) +
+      ggplot(aes(x = Median.Prices, y = Mean.Prices, color=Seller)) + geom_point(size=9) + 
+      geom_text(aes(label=Seller), vjust=-2) + coord_cartesian(xlim = c(350, 750), ylim = c(450, 850)) +
       xlab("Median Prices") + ylab("Mean Prices") + ggtitle("Comparing Mean and Median Prices") +
-      theme(legend.position="none") + guides(size=FALSE)
+      theme(legend.position="none") + guides(size=FALSE) + scale_y_continuous(labels=dollar_format(prefix = "$")) +
+      scale_x_continuous(labels=dollar_format(prefix = "$"))
   )
   
   output$price_graph <- renderGvis(
@@ -41,7 +41,7 @@ function(input, output, session){
                             ifelse(Retailer == "Amazon", sum(Retailer == "Amazon" & !is.na(Price)), 
                                    sum(Retailer == "Macy's" & !is.na(Price))))) %>% 
       gvisBubbleChart(xvar = "Price", yvar = "Count", colorvar = "Retailer", #sizevar = "Count", 
-                   options=list(width="auto", height="350px", hAxis = "{title: 'Price', format: 'currency'}",
+                   options=list(width="auto", height="330px", hAxis = "{title: 'Price', format: 'currency'}",
                                 vAxis = "{title: 'Frequency Count'}", vAxis='{minValue:0}',# maxValue:30}', 
                                  legend = "{position: 'top'}", bubble = "{opacity: .4}"))
   )
@@ -56,6 +56,14 @@ function(input, output, session){
                                    vAxis = "{format: 'currency', title: 'Price'}",
                                    hAxis = "{title: 'Retailer'}"))
   )
+  
+  output$selected_prod_num <- renderValueBox(
+    infoBox(title = movado_df[movado_df["model_number"] == input$select_prod_num, "watch_model"], 
+             value = paste(movado_df[movado_df["model_number"] == input$select_prod_num, c("case_diameter", "dial")], collapse = "mm "),
+             color = "black", icon = icon("clock"), 
+             href = movado_df[movado_df["model_number"] == input$select_prod_num, "url"])
+  )
+  
   
   
   # MACYS

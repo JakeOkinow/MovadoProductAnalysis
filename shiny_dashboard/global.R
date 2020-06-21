@@ -5,6 +5,7 @@ library(lubridate)
 library(ggthemes)
 library(googleVis)
 library(mltools)
+library(scales)
 
 
 ### DEFINE CLEANING FUNCTIONS ###
@@ -121,7 +122,8 @@ collect_movement <- function(x){
 
 macys_df <- read.csv("data/macys_website.csv", stringsAsFactors = FALSE)  %>% 
   mutate(rating = as.numeric(gsub("%", "", rating))) %>%
-  mutate(price = gsub("Orig. |Now |Sale |,", "", price)) %>% mutate(price = as.numeric(substr(price, 2, nchar(price))))
+  mutate(price = gsub("Orig. |Now |Sale |,", "", price)) %>% mutate(price = as.numeric(substr(price, 2, nchar(price)))) %>% 
+  mutate(price = if_else(nchar(sale) == 25, price*.75, price))
 macys_df["gender"] <- sapply(macys_df$watch_model, collect_gender)
 macys_df["case_diameter"] <- sapply(macys_df$watch_model, collect_case_diameter)
 macys_df["model_number"] <- mapply(collect_model_num, macys_df$description, y=macys_df$watch_model)
