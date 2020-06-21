@@ -91,6 +91,7 @@ class MovadoSpider(Spider):
         item["bracelet"] = bracelet
         item["online_exclusive"] = online_exclusive
         item["model_number"] = model_number
+        item["url"] = lnk
 
         yield item
 
