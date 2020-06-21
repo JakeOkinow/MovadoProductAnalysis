@@ -19,7 +19,7 @@ search_request.submit()
 
 csv_file = open('nordstrom_website.csv', 'w', encoding='utf-8', newline='')
 writer = csv.writer(csv_file)
-writer.writerow(['watch_model', 'color', 'in_stock', 'price', 'description', 'bullet_details', 'review_count', 'rating', 'review_text'])
+writer.writerow(['watch_model', 'model_number', 'color', 'in_stock', 'price', 'description', 'bullet_details', 'review_count', 'rating', 'review_text', 'url'])
 
 popupad_acknowledged = False
 
@@ -52,6 +52,9 @@ for url in product_urls:
 
     # WATCH MODEL
     watch_model = driver.find_element_by_xpath('//h1[@itemprop="name"]').text
+
+    # MODEL NUMBER
+    model_number = re.findall("\d{4}\d*", url)[0]
     
     # DESCRIPTION AND BULLETED DETAILS
     description = driver.find_element_by_xpath('//div[@class="_3LvFj"]//p').text
@@ -141,6 +144,7 @@ for url in product_urls:
 
 
         product_dict['watch_model'] = watch_model
+        product_dict['model_number'] = model_number
         product_dict['color'] = color
         product_dict['in_stock'] = in_stock
         product_dict['price'] = price
@@ -149,10 +153,11 @@ for url in product_urls:
         product_dict['review_count'] = review_count
         product_dict['rating'] = rating
         product_dict['review_text'] = review_text
+        product_dict['url'] = url
 
-        writer.writerow([product_dict['watch_model'], product_dict['color'], product_dict['in_stock'], product_dict['price'], \
+        writer.writerow([product_dict['watch_model'], product_dict['model_number'], product_dict['color'], product_dict['in_stock'], product_dict['price'], \
             product_dict['description'], product_dict['bullet_details'], product_dict['review_count'], product_dict['rating'], \
-            product_dict['review_text']])
+            product_dict['review_text'], product_dict['url']])
 
 
 csv_file.close()
