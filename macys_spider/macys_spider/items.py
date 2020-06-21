@@ -10,11 +10,11 @@ import scrapy
 
 class MacysSpiderItem(scrapy.Item):
     watch_model = scrapy.Field()
-    # in_stock = scrapy.Field()
+    sale = scrapy.Field()
     price = scrapy.Field()
     description = scrapy.Field()
     bulleted_details = scrapy.Field()
     rating = scrapy.Field()
     review_count = scrapy.Field()
-    # review_text = scrapy.Field()
+    review_text = scrapy.Field()
     
