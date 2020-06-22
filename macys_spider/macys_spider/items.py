@@ -17,4 +17,4 @@ class MacysSpiderItem(scrapy.Item):
     rating = scrapy.Field()
     review_count = scrapy.Field()
     review_text = scrapy.Field()
-    
+    url = scrapy.Field()

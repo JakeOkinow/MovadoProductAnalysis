@@ -124,6 +124,7 @@ class MacysSpider(Spider):
         item["rating"] = rating
         item["review_count"] = review_count
         item["review_text"] = review_text_list
+        item["url"] = response.request.url
 
         yield item
 
