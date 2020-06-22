@@ -4,91 +4,47 @@ shinyUI(
       dashboardHeader(title="MOVADO"),
       dashboardSidebar(
           sidebarMenu(
-            menuItem("Movado Insight", tabName = "movado", icon = icon("info")),
+            menuItem("Home", tabName = "home", icon = icon("home")),
             menuItem("Retailers",
-              menuSubItem("Overview", tabName = "overview"),
               menuSubItem("Macy's", tabName = "macys"),
               menuSubItem("Nordstrom", tabName = "nordstrom"),
               menuSubItem("Amazon", tabName = "amazon")
                     ),
-            menuItem("Competitors",
-                     menuSubItem("Tag Heuer", tabName = "tag_heuer"),
-                     menuSubItem("Other", tabName = "other")
-                     )
+            menuItem("Insights", tabName = "insights")
           )
       ),
       dashboardBody(
         tabItems(
-          tabItem(tabName = "movado",
+          tabItem(tabName = "home",
                   fluidPage(
-                    h2("Price Distribution"),
-                    fluidRow(box(width = 6, plotOutput("movado_price")), 
-                             column(width = 6, infoBox(width = 10, title = "Average Price", 
-                                                       value = paste0("$", round(mean(movado_df$price), 2))),
-                                    infoBox(width = 10, title = "Median Price", 
-                                            value = paste0("$", round(median(movado_df$price), 2)))
-                                    )
-                            )
-                    )
-                  ),
-          tabItem(tabName = "overview",
-                  fluidPage(
-                    h1(tags$b("Movado Compared to Retailers")),
-                    h2("Overall Pricing"), br(),
-                    fluidRow(box(width = 6, "Amazon tends to have lower priced products, while Macy's and Movado both have most 
-                                 frequently products priced at $695. However, Macy's average product cost is higher 
-                                 than Movado's. Further investigation will determine if this is because of a tendency 
-                                 to carry more of the higher priced watches of Movado's."), 
-                             box(plotOutput("overview_price"))
-                    ),
-                    h2("Individual Product Pricing"),
-                    h3("Largest Price Discrepancies"),
-                    fluidRow(
-                      infoBox(fill = TRUE, color = "red", icon = icon("exclamation"), 
-                              width = 4, title = "Largest Discount", value = paste0("$", max(prices_df$difference, na.rm = TRUE)),
-                              subtitle = paste(ifelse(max_diff$price_macys + max_diff$difference == max_diff$price_movado, "Macy's", 
-                                                      ifelse(max_diff$price_amazon + max_diff$difference == max_diff$price_movado, "Amazon", "Nordstrom")), ",",
-                                               max_diff[["watch_model"]]), 
-                              #href = ## ADD URL TO MACYS NORDSTROM AND AMAZON
-                                ),
-                      infoBox(fill = TRUE, color = "red", icon = icon("exclamation"), 
-                              width = 4, title = "2nd Largest Discount", value = paste0("$", sort(prices_df$difference, decreasing=TRUE)[2]),
-                              subtitle = paste(ifelse(sec_diff$price_macys + sec_diff$difference == sec_diff$price_movado, "Macy's", 
-                                                      ifelse(sec_diff$price_amazon + sec_diff$difference == sec_diff$price_movado, "Amazon", "Nordstrom")), ",",
-                                               sec_diff[["watch_model"]]),
-                              #href = ## ADD URL TO MACYS NORDSTROM AND AMAZON
-                              ),
-                      infoBox(fill = TRUE, color = "red", icon = icon("exclamation"), 
-                              width = 4, title = "3rd Largest Discount", value = paste0("$", sort(prices_df$difference, decreasing=TRUE)[3]),
-                              subtitle = paste(ifelse(thrd_diff$price_macys + thrd_diff$difference == thrd_diff$price_movado, "Macy's", 
-                                                      ifelse(thrd_diff$price_nordstrom + thrd_diff$difference == thrd_diff$price_movado, "Nordstrom", "Amazon")), ",", 
-                                               thrd_diff[["watch_model"]]),
-                              href = ifelse(min(thrd_diff[c("price_amazon", "price_macys", "price_nordstrom")], na.rm = TRUE) == thrd_diff$price_nordstrom, nordstrom_df[nordstrom_df$model_number == thrd_diff$model_number, "url"],
-                                            ifelse(min(thrd_diff[c("price_amazon", "price_macys", "price_nordstrom")], na.rm = TRUE) == thrd_diff$price_macys, macys_df[macys_df$model_number == thrd_diff$model_number, "url"],
-                                                  amazon_df[amazon_df$model_number == thrd_diff$model_number, "url"]))
-                              )
-                          ),
-                    h3("Discrepancies by Retailer"),
-                    fluidRow(
-                      valueBox(color = "yellow", width = 4, subtitle = "Average Macy's Discount", icon = icon('tags'),
-                               value = paste0("$", round(mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price_macys"], na.rm = TRUE), 2))
-                              ),
-                      valueBox(color = "yellow", width = 4, subtitle = "Average Amazon Discount", icon = icon('tags'),
-                             value = paste0("$", round(mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price_amazon"], na.rm = TRUE), 2))
-                              ),
-                      valueBox(color = "yellow", width = 4, subtitle = "Average Nordstrom Discount", icon = icon('tags'),
-                               value = paste0("$", round(mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price_nordstrom"], na.rm = TRUE), 2))
-                              )
-                          ),
-                    selectInput("select_model", label = "Select Model:", choices = sort(unique(prices_df$watch_model))),
-                    fluidRow(box(width = 6, height=400, title = "Mean Prices Per Retailer", htmlOutput("price_graph")),
-                            box(width = 6, height=400, title = "Price Against Frequency from a Seller", htmlOutput("price_bubble"))
-                    ),
-                    selectizeInput("select_prod_num", label = "Select Product Number:", choices = sort(unique(prices_df$model_number))),
-                    fluidRow(box(width = 6, title = "Retailers' Price by Product Number", htmlOutput("prod_num_graph")),
-                             infoBoxOutput("selected_prod_num"))
+                    fluidRow(column(width = 8, offset=2, align = "center", 
+                                    box(width = 12, align = "center", h1(tags$b("MOVADO Insights\n")),
+                                                    h2(tags$b("A Look into Retailers and Resellers")),
+                                                    br(), #img(src = "", style="width: 100%"),
+                                                    h5("Research and modeling by Victoria Lowery and Jake Okinow")))),
+                    fluidRow(column(width = 10, offset=1, align="center", box(width = 12, align = "center", 
+                                 h2("Total Number of Products Scraped"),
+                                 column(width = 3, flexdashboard::gaugeOutput("gauge_movado")), 
+                    column(width = 3, flexdashboard::gaugeOutput("gauge_macys")), 
+                    column(width = 3, flexdashboard::gaugeOutput("gauge_nordstrom")),
+                    column(width = 3, flexdashboard::gaugeOutput("gauge_amazon")))
+                  )),
+                  fluidRow(column(width = 10, offset=1, align="center", box(width = 12, align = "center",
+                               h2("Total Number of Reviews Scraped"),
+                               column(width = 3, flexdashboard::gaugeOutput("gauge_movado_r")), 
+                               column(width = 3, flexdashboard::gaugeOutput("gauge_macys_r")), 
+                               column(width = 3, flexdashboard::gaugeOutput("gauge_nordstrom_r")),
+                               column(width = 3, flexdashboard::gaugeOutput("gauge_amazon_r")))
+                  )), 
+                  fluidRow(column(width = 10, offset=1, align="center", box(width = 12, align = "center",
+                               h2("Average Ratings"),
+                               column(width = 3, flexdashboard::gaugeOutput("gauge_movado_s")), 
+                               column(width = 3, flexdashboard::gaugeOutput("gauge_macys_s")), 
+                               column(width = 3, flexdashboard::gaugeOutput("gauge_nordstrom_s")),
+                               column(width = 3, flexdashboard::gaugeOutput("gauge_amazon_s")))
+                  ))
                   )
-          ),
+                  ),
           tabItem(tabName = "macys",
                   fluidPage(
                     h1(tags$b("Macy's Performance")),
@@ -193,9 +149,65 @@ shinyUI(
                     fluidRow(dataTableOutput("watches_table"))
                   )
                   ),
-          tabItem(tabName = "tag_heuer", "competition 1"
-                  ),
-          tabItem(tabName = "other", "competition 2")
+          
+          tabItem(tabName = "insights",
+                  fluidPage(
+                    h1(tags$b("Movado Compared to Retailers")),
+                    h2("Overall Pricing"), br(),
+                    fluidRow(box(width = 6, "Amazon tends to have lower priced products, while Macy's and Movado both have most 
+                                 frequently products priced at $695. However, Macy's average product cost is higher 
+                                 than Movado's. Further investigation will determine if this is because of a tendency 
+                                 to carry more of the higher priced watches of Movado's."), 
+                             box(plotOutput("overview_price"))
+                    ),
+                    h2("Individual Product Pricing"),
+                    h3("Largest Price Discrepancies"),
+                    fluidRow(
+                      infoBox(fill = TRUE, color = "red", icon = icon("exclamation"), 
+                              width = 4, title = "Largest Discount", value = paste0("$", max(prices_df$difference, na.rm = TRUE)),
+                              subtitle = paste0(ifelse(max_diff$price_macys + max_diff$difference == max_diff$price_movado, "Macy's", 
+                                                      ifelse(max_diff$price_amazon + max_diff$difference == max_diff$price_movado, "Amazon", "Nordstrom")), ", ",
+                                               max_diff[["watch_model"]]), 
+                              #href = ## ADD URL TO MACYS NORDSTROM AND AMAZON
+                      ),
+                      infoBox(fill = TRUE, color = "red", icon = icon("exclamation"), 
+                              width = 4, title = "2nd Largest Discount", value = paste0("$", sort(prices_df$difference, decreasing=TRUE)[2]),
+                              subtitle = paste0(ifelse(sec_diff$price_macys + sec_diff$difference == sec_diff$price_movado, "Macy's", 
+                                                      ifelse(sec_diff$price_amazon + sec_diff$difference == sec_diff$price_movado, "Amazon", "Nordstrom")), ", ",
+                                               sec_diff[["watch_model"]]),
+                              #href = ## ADD URL TO MACYS NORDSTROM AND AMAZON
+                      ),
+                      infoBox(fill = TRUE, color = "red", icon = icon("exclamation"), 
+                              width = 4, title = "3rd Largest Discount", value = paste0("$", sort(prices_df$difference, decreasing=TRUE)[3]),
+                              subtitle = paste0(ifelse(thrd_diff$price_macys + thrd_diff$difference == thrd_diff$price_movado, "Macy's", 
+                                                      ifelse(thrd_diff$price_nordstrom + thrd_diff$difference == thrd_diff$price_movado, "Nordstrom", "Amazon")), ", ", 
+                                               thrd_diff[["watch_model"]]),
+                              href = ifelse(min(thrd_diff[c("price_amazon", "price_macys", "price_nordstrom")], na.rm = TRUE) == thrd_diff$price_nordstrom, nordstrom_df[nordstrom_df$model_number == thrd_diff$model_number, "url"],
+                                            ifelse(min(thrd_diff[c("price_amazon", "price_macys", "price_nordstrom")], na.rm = TRUE) == thrd_diff$price_macys, macys_df[macys_df$model_number == thrd_diff$model_number, "url"],
+                                                   amazon_df[amazon_df$model_number == thrd_diff$model_number, "url"]))
+                      )
+                    ),
+                    h3("Discrepancies by Retailer"),
+                    fluidRow(
+                      valueBox(color = "yellow", width = 4, subtitle = "Average Macy's Discount", icon = icon('tags'),
+                               value = paste0("$", round(mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price_macys"], na.rm = TRUE), 2))
+                      ),
+                      valueBox(color = "yellow", width = 4, subtitle = "Average Amazon Discount", icon = icon('tags'),
+                               value = paste0("$", round(mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price_amazon"], na.rm = TRUE), 2))
+                      ),
+                      valueBox(color = "yellow", width = 4, subtitle = "Average Nordstrom Discount", icon = icon('tags'),
+                               value = paste0("$", round(mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price_nordstrom"], na.rm = TRUE), 2))
+                      )
+                    ),
+                    selectInput("select_model", label = "Select Model:", choices = sort(unique(prices_df$watch_model))),
+                    fluidRow(box(width = 6, height=400, title = "Mean Prices Per Retailer", htmlOutput("price_graph")),
+                             box(width = 6, height=400, title = "Price Against Frequency from a Seller", htmlOutput("price_bubble"))
+                    ),
+                    selectizeInput("select_prod_num", label = "Select Product Number:", choices = sort(unique(prices_df$model_number))),
+                    fluidRow(box(width = 6, title = "Retailers' Price by Product Number", htmlOutput("prod_num_graph")),
+                             infoBoxOutput("selected_prod_num"))
+                  )
+          )
         )
       )
   )

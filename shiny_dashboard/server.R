@@ -1,14 +1,92 @@
 
 function(input, output, session){
 
-    # MOVADO
-  output$movado_price <- renderPlot(
-    movado_df %>% ggplot() + geom_histogram(aes(x=price), fill="skyblue") + ggtitle("Movado's Price Distribution") + 
-      xlab("Watch Price") + ylab("Count")
+    # HOME
+  output$gauge_movado <- flexdashboard::renderGauge(
+    flexdashboard::gauge(nrow(movado_df), label = "Movado.com", min = 0, max = 400, 
+          flexdashboard::gaugeSectors(success = c(250, 400), 
+                                 warning = c(100, 250),
+                                 danger = c(0, 100)))
   )
   
+  output$gauge_macys <- flexdashboard::renderGauge(
+    flexdashboard::gauge(nrow(macys_df), label = "Macys.com", min = 0, max = 400, 
+                         flexdashboard::gaugeSectors(success = c(250, 400), 
+                                                     warning = c(100, 250),
+                                                     danger = c(0, 100)))
+  )
   
-  # OVERVIEW
+  output$gauge_nordstrom <- flexdashboard::renderGauge(
+    flexdashboard::gauge(nrow(nordstrom_df), label = "Nordstrom.com", min = 0, max = 400, 
+                         flexdashboard::gaugeSectors(success = c(250, 400), 
+                                                     warning = c(100, 250),
+                                                     danger = c(0, 100)))
+  )
+  
+  output$gauge_amazon <- flexdashboard::renderGauge(
+    flexdashboard::gauge(length(unique(amazon_df$model_number)), label = "Amazon.com", min = 0, max = 400, 
+                         flexdashboard::gaugeSectors(success = c(250, 400), 
+                                                     warning = c(100, 250),
+                                                     danger = c(0, 100)))
+  )
+  
+  output$gauge_movado_r <- flexdashboard::renderGauge(
+    flexdashboard::gauge(0, label = "Movado.com", min = 0, max = 5000, 
+                         flexdashboard::gaugeSectors(success = c(2000, 5000), 
+                                                     warning = c(500, 2000),
+                                                     danger = c(0, 500)))
+  )
+  
+  output$gauge_macys_r <- flexdashboard::renderGauge(
+    flexdashboard::gauge(sum(macys_df$review_count), label = "Macys.com", min = 0, max = 5000, 
+                         flexdashboard::gaugeSectors(success = c(2000, 5000), 
+                                                     warning = c(500, 2000),
+                                                     danger = c(0, 500)))
+  )
+  
+  output$gauge_nordstrom_r <- flexdashboard::renderGauge(
+    flexdashboard::gauge(sum(nordstrom_df$review_count), label = "Nordstrom.com", min = 0, max = 5000, 
+                         flexdashboard::gaugeSectors(success = c(2000, 5000), 
+                                                     warning = c(500, 2000),
+                                                     danger = c(0, 500)))
+  )
+  
+  output$gauge_amazon_r <- flexdashboard::renderGauge(
+    flexdashboard::gauge(sum(unique(amazon_df$rev_count)), label = "Amazon.com", min = 0, max = 5000, 
+                         flexdashboard::gaugeSectors(success = c(2000, 5000), 
+                                                     warning = c(500, 2000),
+                                                     danger = c(0, 500)))
+  )
+  
+  output$gauge_movado_s <- flexdashboard::renderGauge(
+    flexdashboard::gauge(0, label = "Movado.com", min = 0, max = 5, 
+                         flexdashboard::gaugeSectors(success = c(4, 5), 
+                                                     warning = c(3, 4),
+                                                     danger = c(1, 3)))
+  )
+  
+  output$gauge_macys_s <- flexdashboard::renderGauge(
+    flexdashboard::gauge(round(mean(macys_df$rating, na.rm=TRUE)/20, 2), label = "Macys.com", min = 0, max = 5, 
+                         flexdashboard::gaugeSectors(success = c(4, 5), 
+                                                     warning = c(3, 4),
+                                                     danger = c(1, 3)))
+  )
+  
+  output$gauge_nordstrom_s <- flexdashboard::renderGauge(
+    flexdashboard::gauge(round(mean(nordstrom_df$rating, na.rm=TRUE), 2), label = "Nordstrom.com", min = 0, max = 5, 
+                         flexdashboard::gaugeSectors(success = c(4, 5), 
+                                                     warning = c(3, 4),
+                                                     danger = c(1, 3)))
+  )
+  
+  output$gauge_amazon_s <- flexdashboard::renderGauge(
+    flexdashboard::gauge(round(mean(amazon_df$star, na.rm=TRUE), 2), label = "Amazon.com", min = 0, max = 5, 
+                         flexdashboard::gaugeSectors(success = c(4, 5), 
+                                                     warning = c(3, 4),
+                                                     danger = c(1, 3)))
+  )
+  
+  # INSIGHT
   output$overview_price <- renderPlot(
     data.frame("Mean Prices" = c(round(mean(movado_df$price), 2), round(mean(macys_df$price), 2), 
                             round(mean(nordstrom_df$price), 2), round(mean(amazon_df$price), 2)),

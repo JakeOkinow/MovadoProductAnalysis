@@ -6,6 +6,7 @@ library(ggthemes)
 library(googleVis)
 library(mltools)
 library(scales)
+# library(flexdashboard)
 
 
 ### DEFINE CLEANING FUNCTIONS ###
@@ -228,6 +229,7 @@ macys_df$group <-cut(macys_df$price, seq(100, 3000, by=100), labels = FALSE)
 #                     });"
 # )
 
+# PROVIDE MODEL NUMBERS TO NORDSTROM DATA
 real_m_num <- nordstrom_df %>% 
   mutate(real_m_num = ifelse(model_number == "3259168", "3600086", ifelse(model_number == "3971613", "3600278",
            ifelse(model_number == "4388010", "3650004", ifelse(model_number == "4776696", "607153",
@@ -257,7 +259,7 @@ real_m_num <- nordstrom_df %>%
 nordstrom_df <- cbind.data.frame(nordstrom_df, real_m_num)
            
 
-
+# cont.
 nordstrom_df <- nordstrom_df %>% mutate(real_m_num = ifelse(model_number == "5402193" & color == "Cognac/ Blue", "3600630", ifelse(model_number == "5402193" & color == "Cognac/ White/ Gunmetal", "3600631",
            ifelse(model_number == "5402203", "3600660", ifelse(model_number == "5402199" & color == "Silver/ Gold", "3600651",
            ifelse(model_number == "5402199" & color == "Gold", "3600648", ifelse(model_number == "5402199" & color == "Silver/ Rose Gold", "3600647",
@@ -281,12 +283,13 @@ nordstrom_df <- nordstrom_df %>% mutate(real_m_num = ifelse(model_number == "540
            ifelse(model_number == "5679026", "607202", ifelse(model_number == "5679033" & color == "Khaki/ Carnation Gold", "3600643",
            ifelse(model_number == "5679033" & color == "Khaki/ Gold", "3600642", ifelse(model_number == "5679085" & color == "Silver/ Rose Gold", "3600504", real_m_num))))))))))))))))))))))))))))))))))))))))))))))))))
 
-
+# cont.
 nordstrom_df <- nordstrom_df %>% 
   mutate(model_number = ifelse(model_number == "5679085" & color == "Silver", "3600501", ifelse(model_number == "5679046", "3600658",
            ifelse(model_number == "5683302", "3660028", ifelse(model_number == "5683304", "3660030", ifelse(model_number == "5683305", "3660036",
            ifelse(model_number == "5679407", "3650097", ifelse(model_number == "5679406", "3600586", real_m_num)))))))) %>% select(-real_m_num)
 
+# ESTABLISH DF OF MOVADO PRODUCTS WITH COMPETITOR PRICING
 prices_df <- left_join(select(movado_df, "model_number", "watch_model", "price"), 
                        select(macys_df, "model_number", "price"), by= "model_number", suffix = c("_movado", "_macys")) %>% 
   left_join(select(amazon_df, "model_number", "price_amazon" = "price"),  by = "model_number") %>%
@@ -295,7 +298,12 @@ prices_df <- left_join(select(movado_df, "model_number", "watch_model", "price")
 prices_df$difference <- if_else(is.na(prices_df$price_macys) & is.na(prices_df$price_amazon) & is.na(prices_df$price_nordstrom), 0, 
                                 prices_df$price_movado - pmin(prices_df$price_macys, prices_df$price_amazon, prices_df$price_nordstrom, na.rm = TRUE))
 
-
+# EXTRACT 1, 2, 3 TOP DIFFERENCES IN PRICE
 max_diff <- prices_df[prices_df["difference"] == max(prices_df$difference, na.rm = TRUE), ]
 sec_diff <- prices_df[prices_df["difference"] == sort(prices_df$difference, decreasing=TRUE)[2], ]
 thrd_diff <- prices_df[prices_df["difference"] == sort(prices_df$difference, decreasing=TRUE)[3], ]
+
+# FIND WORD COUNTS OF REVIEWS
+# macys_df %>% mutate(avg_length = )
+
+
