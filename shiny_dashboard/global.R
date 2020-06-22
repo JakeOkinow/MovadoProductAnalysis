@@ -135,7 +135,8 @@ movado_df <- read.csv("data/movado_website.csv", stringsAsFactors = FALSE)  %>%
   mutate(model_number = as.character(model_number))
 
 nordstrom_df <- read.csv("data/nordstrom_website.csv", stringsAsFactors = FALSE) %>% 
-  mutate(price = gsub(",", "", price)) %>% mutate(price = as.numeric(substr(price, 2, nchar(price))))
+  mutate(price = gsub(",", "", price)) %>% mutate(price = as.numeric(substr(price, 2, nchar(price)))) %>% 
+  mutate(model_number = as.character(model_number))
 nordstrom_5_rating <- nrow(nordstrom_df[nordstrom_df["rating"] == 5 & !is.na(nordstrom_df["rating"]), ])
 nordstrom_df["case_diameter"] <- sapply(nordstrom_df$watch_model, collect_case_diameter)
 nordstrom_df["crystal"] <- sapply(nordstrom_df$bullet_details, collect_crystal)
@@ -154,91 +155,147 @@ amazon_df["gender"] <- sapply(amazon_df$product, collect_gender)
 amazon_df["collection"] <- sapply(amazon_df$product, collect_collection)
 amazon_d_df <- amazon_df %>% distinct(., code, .keep_all = TRUE)
 
-prices_df <- left_join(select(movado_df, "model_number", "watch_model", "price"), 
-                     select(macys_df, "model_number", "price", "watch_model"), by= "model_number", suffix = c("_movado", "_macys")) %>% 
-  left_join(select(amazon_df, "model_number", "price","product"),  by= "model_number")
 
-prices_df$difference <- if_else(is.na(prices_df$price_macys) & is.na(prices_df$price), 0,
-                                ifelse(is.na(prices_df$price_macys), (prices_df$price_movado - prices_df$price), 
-                                       ifelse(is.na(prices_df$price), (prices_df$price_movado - prices_df$price_macys),
-                                      ifelse(prices_df$price < prices_df$price_macys, (prices_df$price_movado - prices_df$price), 
-                                (prices_df$price_movado - prices_df$price_macys)))))
+macys_df$group <-cut(macys_df$price, seq(100, 3000, by=100), labels = FALSE)
+
+# gs = amazon_df %>% group_by(seller) %>% mutate(., count = n())
+# ungroup(gs)
+# 
+# amazon_dt <- gs %>% 
+#   select(seller, count, product, everything()) %>% 
+#   nest(-seller, -count)
+# 
+# data <- amazon_dt %>% {bind_cols(data_frame(' ' = rep('&oplus;',nrow(.))),.)}
+# 
+# # get dynamic info and strings
+# nested_columns         <- which(sapply(data,class)=="list") %>% setNames(NULL)
+# not_nested_columns     <- which(!(seq_along(data) %in% c(1,nested_columns)))
+# not_nested_columns_str <- not_nested_columns %>% paste(collapse="] + '_' + d[") %>% paste0("d[",.,"]")
+# 
+# 
+# # The callback
+# # turn rows into child rows and remove from parent
+# callback <- paste0("
+#                     table.column(1).nodes().to$().css({cursor: 'pointer'});
+#                 
+#                     // Format data object (the nested table) into another table
+#                     var format = function(d) {
+#                       if(d != null){ 
+#                         var result = ('<table id=\"child_' + ",not_nested_columns_str," + '\">').replace('.','_') + '<thead><tr>'
+#                         for (var col in d[",nested_columns,"]){
+#                           result += '<th>' + col + '</th>'
+#                         }
+#                         result += '</tr></thead></table>'
+#                         return result
+#                       }else{
+#                         return '';
+#                       }
+#                     }
+#                 
+#                     var format_datatable = function(d) {
+#                       var dataset = [];
+#                       for (i = 0; i < + d[",nested_columns,"]['product'].length; i++) {
+#                         var datarow = [];
+#                         for (var col in d[",nested_columns,"]){
+#                           datarow.push(d[",nested_columns,"][col][i])
+#                         }
+#                         dataset.push(datarow)
+#                       }
+#                       var subtable = $(('table#child_' + ",not_nested_columns_str,").replace('.','_')).DataTable({
+#                         'data': dataset,
+#                         'autoWidth': true, 
+#                         'deferRender': true, 
+#                         'info': false, 
+#                         'lengthChange': false, 
+#                         'ordering': true, 
+#                         'paging': false, 
+#                         'scrollX': false, 
+#                         'scrollY': false, 
+#                         'searching': false 
+#                       });
+#                     };
+#                 
+#                     table.on('click', 'td.details-control', function() {
+#                       var td = $(this), row = table.row(td.closest('tr'));
+#                       if (row.child.isShown()) {
+#                         row.child.hide();
+#                         td.html('&oplus;');
+#                       } else {
+#                         row.child(format(row.data())).show();
+#                         td.html('&CircleMinus;');
+#                         format_datatable(row.data())
+#                       }
+#                     });"
+# )
+
+real_m_num <- nordstrom_df %>% 
+  mutate(real_m_num = ifelse(model_number == "3259168", "3600086", ifelse(model_number == "3971613", "3600278",
+           ifelse(model_number == "4388010", "3650004", ifelse(model_number == "4776696", "607153",
+           ifelse(model_number == "4776703", "607180", ifelse(model_number == "4832729", "607178", 
+           ifelse(model_number == "4944900", "3600521", ifelse(model_number == "4944904" & color == "Gold", "3600508",
+           ifelse(model_number == "4944904" & color == "Blue", "3600510", ifelse(model_number == "4944904" & color == "Gunmetal", "3600509",
+           ifelse(model_number == "4944918", "607358", ifelse(model_number == "4944938", "607220",
+           ifelse(model_number == "4944940", "607219", ifelse(model_number == "4945350" & color == "White", "3600616",
+           ifelse(model_number == "4945350" & color == "Blush Pink", "3600615",
+           ifelse(model_number == "5030472", "3600507", ifelse(model_number == "5071045", "607226",
+           ifelse(model_number == "5064190", "3600551", ifelse(model_number == "5071046", "607240",
+           ifelse(model_number == "5071049" & color == "Black", "3600562", ifelse(model_number == "5071049" & color == "Gold", "3600560",
+           ifelse(model_number == "5071049" & color == "Blue", "3600610", ifelse(model_number == "5071049" & color == "Grey", "3600561",
+           ifelse(model_number == "5071050", "607307", ifelse(model_number == "5108250", "3650069",
+           ifelse(model_number == "5247092" & color == "Silver", "3600595", ifelse(model_number == "5247092" & color == "Light Gold", "3600598",
+           ifelse(model_number == "5247093", "3600602",
+           ifelse(model_number == "5247097", "3650092", ifelse(model_number == "5247100" & color == "Silver", "3600589",
+           ifelse(model_number == "5247100" & color == "Gold", "3600588", ifelse(model_number == "5247103", "3600599",
+           ifelse(model_number == "5247104" & color == "Silver/ Blue/ Silver", "607349", ifelse(model_number == "5247104" & color == "Gold/ Black/ Gold", "607396",
+           ifelse(model_number == "5257771", "3600619", ifelse(model_number == "5357327", "3600592", ifelse(model_number == "5358932", "3600593",
+           ifelse(model_number == "5402100" & color == "Gold", "3600682", ifelse(model_number == "5402100" & color == "Blue", "3600683",
+           ifelse(model_number == "5402102", "3660032", ifelse(model_number == "5402108", "3600629",
+           ifelse(model_number == "5402112" & color == "Gold", "3600656", ifelse(model_number == "5402112" & color == "Rose Gold", "3600657",
+           ifelse(model_number == "5402190" & color == "Gold/ Beige/ Gold", "3600640", ifelse(model_number == "5402190" & color == "Silver/ Blush", "3600702",
+           ifelse(model_number == "5402190" & color == "Silver", "3600638", ifelse(model_number == "5402191", "3600653", "UNKNOWN")))))))))))))))))))))))))))))))))))))))))))))))) %>% 
+  select(real_m_num)
+nordstrom_df <- cbind.data.frame(nordstrom_df, real_m_num)
+           
+
+
+nordstrom_df <- nordstrom_df %>% mutate(real_m_num = ifelse(model_number == "5402193" & color == "Cognac/ Blue", "3600630", ifelse(model_number == "5402193" & color == "Cognac/ White/ Gunmetal", "3600631",
+           ifelse(model_number == "5402203", "3600660", ifelse(model_number == "5402199" & color == "Silver/ Gold", "3600651",
+           ifelse(model_number == "5402199" & color == "Gold", "3600648", ifelse(model_number == "5402199" & color == "Silver/ Rose Gold", "3600647",
+           ifelse(model_number == "5402200", "3600675", ifelse(model_number == "5402204", "3660025",
+           ifelse(model_number == "5402239", "3600677", ifelse(model_number == "5402240", "3660026",
+           ifelse(model_number == "5412752", "3600685", ifelse(model_number == "5412755", "3600629",
+           ifelse(model_number == "5415004", "3600632", ifelse(model_number == "5439361", "3600673", 
+           ifelse(model_number == "5439467" & color == "Rose Gold", "3600654", ifelse(model_number == "5439467" & color == "Silver", "3600655",
+           ifelse(model_number == "5444405", "3650105", ifelse(model_number == "5523030", "3650101", ifelse(model_number == "5577742", "3600699",
+           ifelse(model_number == "5577744" & color == "White/ Gold", "3600710", ifelse(model_number == "5577744" & color == "Blush/ Silver", "3600709",
+           ifelse(model_number == "5577745", "607472", ifelse(model_number == "5577748", "607471", ifelse(model_number == "5613740", "3600712",
+           ifelse(model_number == "5613741", "607511", ifelse(model_number == "5613744" & color == "Grey/ Gold", "3600692", 
+           ifelse(model_number == "5613744" & color == "Tan/ Blue", "3600691", ifelse(model_number == "5613745", "607476", 
+           ifelse(model_number == "5636328", "3600596", ifelse(model_number == "5648011", "607352", ifelse(model_number == "5661973", "3600639",
+           ifelse(model_number == "5661975", "3600649", ifelse(model_number == "5662017", "3600591",
+           ifelse(model_number == "5678560" & color == "Black", "3600621", ifelse(model_number == "5678560" & color == "Black/ Gold", "3600623",
+           ifelse(model_number == "5678560" & color == "Black/ Silver", "3600624", ifelse(model_number == "5678616" & color == "Black/ Blue/ Silver", "607270",
+           ifelse(model_number == "5678616" & color == "Black/ Gold", "607271", ifelse(model_number == "5678616" & color == "Black/ Silver", "607269",
+           ifelse(model_number == "5678881", "607203", ifelse(model_number == "5678851", "3600492", ifelse(model_number == "5678896", "0607491",
+           ifelse(model_number == "5678898", "3600698", ifelse(model_number == "5679005", "3650088", ifelse(model_number == "5679011", "3600708",
+           ifelse(model_number == "5679026", "607202", ifelse(model_number == "5679033" & color == "Khaki/ Carnation Gold", "3600643",
+           ifelse(model_number == "5679033" & color == "Khaki/ Gold", "3600642", ifelse(model_number == "5679085" & color == "Silver/ Rose Gold", "3600504", real_m_num))))))))))))))))))))))))))))))))))))))))))))))))))
+
+
+nordstrom_df <- nordstrom_df %>% 
+  mutate(model_number = ifelse(model_number == "5679085" & color == "Silver", "3600501", ifelse(model_number == "5679046", "3600658",
+           ifelse(model_number == "5683302", "3660028", ifelse(model_number == "5683304", "3660030", ifelse(model_number == "5683305", "3660036",
+           ifelse(model_number == "5679407", "3650097", ifelse(model_number == "5679406", "3600586", real_m_num)))))))) %>% select(-real_m_num)
+
+prices_df <- left_join(select(movado_df, "model_number", "watch_model", "price"), 
+                       select(macys_df, "model_number", "price"), by= "model_number", suffix = c("_movado", "_macys")) %>% 
+  left_join(select(amazon_df, "model_number", "price_amazon" = "price"),  by = "model_number") %>%
+  left_join(select(nordstrom_df, "model_number", "price_nordstrom" = "price"), by = "model_number")
+
+prices_df$difference <- if_else(is.na(prices_df$price_macys) & is.na(prices_df$price_amazon) & is.na(prices_df$price_nordstrom), 0, 
+                                prices_df$price_movado - pmin(prices_df$price_macys, prices_df$price_amazon, prices_df$price_nordstrom, na.rm = TRUE))
+
 
 max_diff <- prices_df[prices_df["difference"] == max(prices_df$difference, na.rm = TRUE), ]
 sec_diff <- prices_df[prices_df["difference"] == sort(prices_df$difference, decreasing=TRUE)[2], ]
 thrd_diff <- prices_df[prices_df["difference"] == sort(prices_df$difference, decreasing=TRUE)[3], ]
-
-
-macys_df$group <-cut(macys_df$price, seq(100, 3000, by=100), labels = FALSE)
-
-gs = amazon_df %>% group_by(seller) %>% mutate(., count = n())
-ungroup(gs)
-
-amazon_dt <- gs %>% 
-  select(seller, count, product, everything()) %>% 
-  nest(-seller, -count)
-
-data <- amazon_dt %>% {bind_cols(data_frame(' ' = rep('&oplus;',nrow(.))),.)}
-
-# get dynamic info and strings
-nested_columns         <- which(sapply(data,class)=="list") %>% setNames(NULL)
-not_nested_columns     <- which(!(seq_along(data) %in% c(1,nested_columns)))
-not_nested_columns_str <- not_nested_columns %>% paste(collapse="] + '_' + d[") %>% paste0("d[",.,"]")
-
-
-# The callback
-# turn rows into child rows and remove from parent
-callback <- paste0("
-                    table.column(1).nodes().to$().css({cursor: 'pointer'});
-                
-                    // Format data object (the nested table) into another table
-                    var format = function(d) {
-                      if(d != null){ 
-                        var result = ('<table id=\"child_' + ",not_nested_columns_str," + '\">').replace('.','_') + '<thead><tr>'
-                        for (var col in d[",nested_columns,"]){
-                          result += '<th>' + col + '</th>'
-                        }
-                        result += '</tr></thead></table>'
-                        return result
-                      }else{
-                        return '';
-                      }
-                    }
-                
-                    var format_datatable = function(d) {
-                      var dataset = [];
-                      for (i = 0; i < + d[",nested_columns,"]['product'].length; i++) {
-                        var datarow = [];
-                        for (var col in d[",nested_columns,"]){
-                          datarow.push(d[",nested_columns,"][col][i])
-                        }
-                        dataset.push(datarow)
-                      }
-                      var subtable = $(('table#child_' + ",not_nested_columns_str,").replace('.','_')).DataTable({
-                        'data': dataset,
-                        'autoWidth': true, 
-                        'deferRender': true, 
-                        'info': false, 
-                        'lengthChange': false, 
-                        'ordering': true, 
-                        'paging': false, 
-                        'scrollX': false, 
-                        'scrollY': false, 
-                        'searching': false 
-                      });
-                    };
-                
-                    table.on('click', 'td.details-control', function() {
-                      var td = $(this), row = table.row(td.closest('tr'));
-                      if (row.child.isShown()) {
-                        row.child.hide();
-                        td.html('&oplus;');
-                      } else {
-                        row.child(format(row.data())).show();
-                        td.html('&CircleMinus;');
-                        format_datatable(row.data())
-                      }
-                    });"
-)
-
-

@@ -46,18 +46,26 @@ shinyUI(
                     fluidRow(
                       infoBox(fill = TRUE, color = "red", icon = icon("exclamation"), 
                               width = 4, title = "Largest Discount", value = paste0("$", max(prices_df$difference, na.rm = TRUE)),
-                              subtitle = paste(ifelse(min(max_diff[c("price", "price_macys")], na.rm = TRUE) == ifelse(is.na(max_diff[["price"]]), 0, max_diff[["price"]]), "Amazon,", "Macy's,"), max_diff[["watch_model_movado"]]), 
-                              href = ## ADD URL TO MACYS NORDSTROM AND AMAZON
+                              subtitle = paste(ifelse(max_diff$price_macys + max_diff$difference == max_diff$price_movado, "Macy's", 
+                                                      ifelse(max_diff$price_amazon + max_diff$difference == max_diff$price_movado, "Amazon", "Nordstrom")), ",",
+                                               max_diff[["watch_model"]]), 
+                              #href = ## ADD URL TO MACYS NORDSTROM AND AMAZON
                                 ),
                       infoBox(fill = TRUE, color = "red", icon = icon("exclamation"), 
                               width = 4, title = "2nd Largest Discount", value = paste0("$", sort(prices_df$difference, decreasing=TRUE)[2]),
-                              subtitle = paste(ifelse(min(sec_diff[c("price", "price_macys")], na.rm = TRUE) == ifelse(is.na(sec_diff[["price"]]), 0, sec_diff[["price"]]), "Amazon,", "Macy's,"), sec_diff[["watch_model_movado"]]), 
-                              href = ## ADD URL TO MACYS NORDSTROM AND AMAZON
+                              subtitle = paste(ifelse(sec_diff$price_macys + sec_diff$difference == sec_diff$price_movado, "Macy's", 
+                                                      ifelse(sec_diff$price_amazon + sec_diff$difference == sec_diff$price_movado, "Amazon", "Nordstrom")), ",",
+                                               sec_diff[["watch_model"]]),
+                              #href = ## ADD URL TO MACYS NORDSTROM AND AMAZON
                               ),
                       infoBox(fill = TRUE, color = "red", icon = icon("exclamation"), 
                               width = 4, title = "3rd Largest Discount", value = paste0("$", sort(prices_df$difference, decreasing=TRUE)[3]),
-                              subtitle = paste(ifelse(min(thrd_diff[c("price", "price_macys")], na.rm = TRUE) == ifelse(is.na(thrd_diff[["price"]]), 0, thrd_diff[["price"]]), "Amazon,", "Macy's,"), thrd_diff[["watch_model_movado"]]), 
-                              href = ## ADD URL TO MACYS NORDSTROM AND AMAZON
+                              subtitle = paste(ifelse(thrd_diff$price_macys + thrd_diff$difference == thrd_diff$price_movado, "Macy's", 
+                                                      ifelse(thrd_diff$price_nordstrom + thrd_diff$difference == thrd_diff$price_movado, "Nordstrom", "Amazon")), ",", 
+                                               thrd_diff[["watch_model"]]),
+                              href = ifelse(min(thrd_diff[c("price_amazon", "price_macys", "price_nordstrom")], na.rm = TRUE) == thrd_diff$price_nordstrom, nordstrom_df[nordstrom_df$model_number == thrd_diff$model_number, "url"],
+                                            ifelse(min(thrd_diff[c("price_amazon", "price_macys", "price_nordstrom")], na.rm = TRUE) == thrd_diff$price_macys, macys_df[macys_df$model_number == thrd_diff$model_number, "url"],
+                                                  amazon_df[amazon_df$model_number == thrd_diff$model_number, "url"]))
                               )
                           ),
                     h3("Discrepancies by Retailer"),
@@ -66,13 +74,13 @@ shinyUI(
                                value = paste0("$", round(mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price_macys"], na.rm = TRUE), 2))
                               ),
                       valueBox(color = "yellow", width = 4, subtitle = "Average Amazon Discount", icon = icon('tags'),
-                             value = paste0("$", round(mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price"], na.rm = TRUE), 2))
+                             value = paste0("$", round(mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price_amazon"], na.rm = TRUE), 2))
                               ),
-                      valueBox(color = "yellow", width = 4, subtitle = "Average Nordstrom Discount", value = 0, icon = icon('tags'),
-                               #value = paste0("$", round(mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price"], na.rm = TRUE), 2))
+                      valueBox(color = "yellow", width = 4, subtitle = "Average Nordstrom Discount", icon = icon('tags'),
+                               value = paste0("$", round(mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price_nordstrom"], na.rm = TRUE), 2))
                               )
                           ),
-                    selectInput("select_model", label = "Select Model:", choices = sort(unique(prices_df$watch_model_movado))),
+                    selectInput("select_model", label = "Select Model:", choices = sort(unique(prices_df$watch_model))),
                     fluidRow(box(width = 6, height=400, title = "Mean Prices Per Retailer", htmlOutput("price_graph")),
                             box(width = 6, height=400, title = "Price Against Frequency from a Seller", htmlOutput("price_bubble"))
                     ),

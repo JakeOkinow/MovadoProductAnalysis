@@ -23,9 +23,10 @@ function(input, output, session){
   )
   
   output$price_graph <- renderGvis(
-    prices_df %>% filter(watch_model_movado == input$select_model) %>% 
+    prices_df %>% filter(watch_model == input$select_model) %>% 
       summarise(Movado = mean(price_movado, na.rm = TRUE), "Macy's" = mean(price_macys, na.rm = TRUE), 
-                "Amazon" = mean(price, na.rm = TRUE)) %>% pivot_longer(cols = c("Movado", "Amazon", "Macy's")) %>% 
+                "Amazon" = mean(price_amazon, na.rm = TRUE), "Nordstrom" = mean(price_nordstrom, na.rm = TRUE)) %>% 
+      pivot_longer(cols = c("Movado", "Amazon", "Macy's", "Nordstrom")) %>% 
       gvisColumnChart(xvar = "name", yvar = "value", 
                    options=list(width="auto", height="330px", bar = "{groupWidth: '95%'}", 
                                 legend = "{position: 'none'}", colors = "['#55c821']", 
@@ -34,9 +35,9 @@ function(input, output, session){
   )
   
   output$price_bubble <- renderGvis(
-    prices_df %>% filter(watch_model_movado == input$select_model) %>% 
-      select(Model = watch_model_movado, Movado = price_movado, "Macy's" = price_macys, "Amazon" = price) %>% 
-      pivot_longer(names_to = "Retailer", values_to = "Price", cols = c("Movado", "Amazon", "Macy's")) %>% 
+    prices_df %>% filter(watch_model == input$select_model) %>% 
+      select(Model = watch_model, Movado = price_movado, "Macy's" = price_macys, "Amazon" = price_amazon, "Nordstrom" = price_nordstrom) %>% 
+      pivot_longer(names_to = "Retailer", values_to = "Price", cols = c("Movado", "Amazon", "Macy's", "Nordstrom")) %>% 
       mutate(Count = if_else(Retailer == "Movado", sum(Retailer == "Movado" & !is.na(Price)), 
                             ifelse(Retailer == "Amazon", sum(Retailer == "Amazon" & !is.na(Price)), 
                                    sum(Retailer == "Macy's" & !is.na(Price))))) %>% 
@@ -49,7 +50,8 @@ function(input, output, session){
   output$prod_num_graph <- renderGvis(
     prices_df %>% filter(model_number == input$select_prod_num) %>% 
       summarise(Movado = mean(price_movado, na.rm = TRUE), "Macy's" = mean(price_macys, na.rm = TRUE), 
-                "Amazon" = mean(price, na.rm = TRUE)) %>% pivot_longer(cols = c("Movado", "Amazon", "Macy's")) %>% 
+                "Amazon" = mean(price_amazon, na.rm = TRUE), "Nordstrom" = mean(price_nordstrom, na.rm = TRUE)) %>% 
+      pivot_longer(cols = c("Movado", "Amazon", "Macy's", "Nordstrom")) %>% 
       gvisColumnChart(xvar = "name", yvar = "value", 
                       options=list(width="auto", height="350px", bar = "{groupWidth: '95%'}", 
                                    legend = "{position: 'none'}", #colors = "['#55c821']", 
