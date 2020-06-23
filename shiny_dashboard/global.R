@@ -3,10 +3,9 @@ library(shinydashboard)
 library(DT)
 library(lubridate)
 library(ggthemes)
-library(googleVis)
-library(mltools)
 library(scales)
 library(networkD3)
+library(googleVis)
 # library(flexdashboard)
 
 
@@ -155,80 +154,22 @@ amazon_df <- read.csv("data/amazonsellers copy.csv", stringsAsFactors = FALSE) %
   mutate(rev_count = ifelse(rev_count == "", 0, as.numeric(gsub(" ratings| rating", "", rev_count))))
 amazon_df["gender"] <- sapply(amazon_df$product, collect_gender)
 amazon_df["collection"] <- sapply(amazon_df$product, collect_collection)
+amazon_5_rating <- length(unique(amazon_df[amazon_df["star"] == 5 & !is.na(amazon_df["star"]), "model_number"]))
+
 amazon_d_df <- amazon_df %>% distinct(., code, .keep_all = TRUE)
+amazon_s_df <- amazon_df %>% group_by(seller) %>% mutate(., count = n())
+amazon_s_df <- amazon_s_df %>% distinct(., seller, .keep_all = TRUE)
+amazon_p_df <- amazon_df %>% group_by(product) %>% mutate(., count = n())
+amazon_p_df <- amazon_p_df %>% distinct(., product, .keep_all = TRUE)
 
+amazon_s_df <- amazon_s_df %>% mutate(., name =paste(as.character(seller), count, sep=" : " ))
+amazon_s_df <- amazon_s_df[order(-amazon_s_df$count),]
+s_list <- setNames(amazon_s_df$seller, amazon_s_df$name)
 
-macys_df$group <-cut(macys_df$price, seq(100, 3000, by=100), labels = FALSE)
+amazon_p_df <- amazon_p_df %>% mutate(., name =paste(as.character(product), count, sep=" : " ))
+amazon_p_df <- amazon_p_df[order(-amazon_p_df$count),]
+p_list <- setNames(amazon_p_df$product, amazon_p_df$name)
 
-# gs = amazon_df %>% group_by(seller) %>% mutate(., count = n())
-# ungroup(gs)
-# 
-# amazon_dt <- gs %>% 
-#   select(seller, count, product, everything()) %>% 
-#   nest(-seller, -count)
-# 
-# data <- amazon_dt %>% {bind_cols(data_frame(' ' = rep('&oplus;',nrow(.))),.)}
-# 
-# # get dynamic info and strings
-# nested_columns         <- which(sapply(data,class)=="list") %>% setNames(NULL)
-# not_nested_columns     <- which(!(seq_along(data) %in% c(1,nested_columns)))
-# not_nested_columns_str <- not_nested_columns %>% paste(collapse="] + '_' + d[") %>% paste0("d[",.,"]")
-# 
-# 
-# # The callback
-# # turn rows into child rows and remove from parent
-# callback <- paste0("
-#                     table.column(1).nodes().to$().css({cursor: 'pointer'});
-#                 
-#                     // Format data object (the nested table) into another table
-#                     var format = function(d) {
-#                       if(d != null){ 
-#                         var result = ('<table id=\"child_' + ",not_nested_columns_str," + '\">').replace('.','_') + '<thead><tr>'
-#                         for (var col in d[",nested_columns,"]){
-#                           result += '<th>' + col + '</th>'
-#                         }
-#                         result += '</tr></thead></table>'
-#                         return result
-#                       }else{
-#                         return '';
-#                       }
-#                     }
-#                 
-#                     var format_datatable = function(d) {
-#                       var dataset = [];
-#                       for (i = 0; i < + d[",nested_columns,"]['product'].length; i++) {
-#                         var datarow = [];
-#                         for (var col in d[",nested_columns,"]){
-#                           datarow.push(d[",nested_columns,"][col][i])
-#                         }
-#                         dataset.push(datarow)
-#                       }
-#                       var subtable = $(('table#child_' + ",not_nested_columns_str,").replace('.','_')).DataTable({
-#                         'data': dataset,
-#                         'autoWidth': true, 
-#                         'deferRender': true, 
-#                         'info': false, 
-#                         'lengthChange': false, 
-#                         'ordering': true, 
-#                         'paging': false, 
-#                         'scrollX': false, 
-#                         'scrollY': false, 
-#                         'searching': false 
-#                       });
-#                     };
-#                 
-#                     table.on('click', 'td.details-control', function() {
-#                       var td = $(this), row = table.row(td.closest('tr'));
-#                       if (row.child.isShown()) {
-#                         row.child.hide();
-#                         td.html('&oplus;');
-#                       } else {
-#                         row.child(format(row.data())).show();
-#                         td.html('&CircleMinus;');
-#                         format_datatable(row.data())
-#                       }
-#                     });"
-# )
 
 # PROVIDE MODEL NUMBERS TO NORDSTROM DATA
 real_m_num <- nordstrom_df %>% 
@@ -255,7 +196,7 @@ real_m_num <- nordstrom_df %>%
            ifelse(model_number == "5402102", "3660032", ifelse(model_number == "5402108", "3600629",
            ifelse(model_number == "5402112" & color == "Gold", "3600656", ifelse(model_number == "5402112" & color == "Rose Gold", "3600657",
            ifelse(model_number == "5402190" & color == "Gold/ Beige/ Gold", "3600640", ifelse(model_number == "5402190" & color == "Silver/ Blush", "3600702",
-           ifelse(model_number == "5402190" & color == "Silver", "3600638", ifelse(model_number == "5402191", "3600653", "UNKNOWN")))))))))))))))))))))))))))))))))))))))))))))))) %>% 
+           ifelse(model_number == "5402190" & color == "Silver", "3600638", ifelse(model_number == "5402191", "3600653", "Unknown")))))))))))))))))))))))))))))))))))))))))))))))) %>% 
   select(real_m_num)
 nordstrom_df <- cbind.data.frame(nordstrom_df, real_m_num)
            

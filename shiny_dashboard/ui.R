@@ -49,18 +49,18 @@ shinyUI(
                   fluidPage(
                     h1(tags$b("Macy's Performance")),
                     h2("Customer Satisfation: Ratings Distribution"), br(),
-                    fluidRow(
-                      infoBox(width = 4, color = "yellow", title = "Total Unrated Products", value = sum(is.na(macys_df$rating)),
-                              subtitle = paste0(round(100*sum(is.na(macys_df$rating))/nrow(macys_df)), "% of products listed on Macy's")),
-                      infoBox(width = 4, title="Total 100%-Scoring Products", 
-                              subtitle = paste0(round(100*macys_5_rating/nrow(macys_df)), "% of products listed on Macy's"), 
-                              fill = TRUE, value = macys_5_rating)),
-                      fluidRow(
-                        box(p("Almost half of Macy's products have received a review, and those with ratings seem heavily right skewed 
+                    fluidRow(column(width = 6, 
+                      box(width = 12, p("Almost half of Macy's products have received a review, and those with ratings seem heavily right skewed 
                                       to being in the 90%-100% satisfaction range.", br(), br(), tags$b(paste0("In fact, ", round(100*macys_5_rating/nrow(macys_df)), "% of all Movado 
-                                      products listed on Macy's.com are rated 100% satisfaction.")), style = "font-size:25px;")),
-                        box(width = 6, plotOutput("macys_stars"))
-                             ),
+                                      products listed on Macy's.com are rated 100% satisfaction.")))),
+                      infoBox(width = 9, color = "yellow", title = "Total Unrated Products", value = sum(is.na(macys_df$rating)), icon = icon("comment-slash"), 
+                              subtitle = paste0(round(100*sum(is.na(macys_df$rating))/nrow(macys_df)), "% of products listed on Macy's")),
+                      infoBox(width = 9, title="Total 100%-Scoring Products", icon = icon("star"), 
+                              subtitle = paste0(round(100*macys_5_rating/nrow(macys_df)), "% of products listed on Macy's"), 
+                              value = macys_5_rating)),
+                      column(width = 6, 
+                        box(width = 12, plotOutput("macys_stars"))
+                             )),
                     h2("Reviews: Presence and Distribution"), br(),
                     fluidRow(
                              column(width = 6, infoBox(width = 12, fill = TRUE, title = "Most Reviewed Product", value = macys_df[max(macys_df["review_count"]), "watch_model"],
@@ -69,13 +69,13 @@ shinyUI(
                                                       possibly implying that Macy's does not allow customers to rate a product without leaving a review. A  
                                                       word count of reviews written show that most do not exceed {FIND AVERAGE WORD COUNT OF MACY'S REVIEW}.", 
                                                       br(), br(), "We can also see in the graph below on the right that", tags$b(" of the products receiving reviews, nearly half 
-                                                      of those only receive one review."), style = "font-size:25px;") )
+                                                      of those only receive one review.")) )
                                     ), 
-                             column(width = 6, box(align = "center", width = 12, htmlOutput("macys_zero_reviews_pie")), 
+                             column(width = 6, box(align = "center", width = 12, shiny::htmlOutput("macys_zero_reviews_pie")), 
                              box(width = 12, plotOutput("macys_review_count_sans_0")))
                              ),
                     h2("Price Distribution"),
-                    fluidRow(box(width = 8, htmlOutput("combo_macys_price"), height = 460), 
+                    fluidRow(box(width = 8, plotOutput("macys_price")), 
                             column(width = 4, infoBox(width = 12, title = "Average Price", 
                                                       value = paste0("$", round(mean(macys_df$price), 2))),
                                    infoBox(width = 12, title = "Median Price", 
@@ -89,10 +89,10 @@ shinyUI(
                     h1(tags$b("Nordstrom's Performance")),
                     h2("Customer Satisfation: Ratings Distribution"), br(),
                     fluidRow(box(width = 6, plotOutput("nordstrom_stars")), 
-                             column(width = 6, infoBox(width = 10, title="Total 5-Star-Rated Products", 
+                             column(width = 6, infoBox(width = 10, title="Total 5-Star-Rated Products", icon = icon("star"), 
                                                        subtitle = paste0(round(100*nordstrom_5_rating/nrow(nordstrom_df)), "% of Movado products"), 
-                                                       fill = TRUE, value = nordstrom_5_rating),
-                                    infoBox(width = 10, color = "yellow", title = "Total Unrated Products", value = sum(is.na(nordstrom_df$rating)),
+                                                       value = nordstrom_5_rating),
+                                    infoBox(width = 10, color = "yellow", title = "Total Unrated Products", value = sum(is.na(nordstrom_df$rating)), icon = icon("comment-slash"),
                                             subtitle = paste0(round(100*sum(is.na(nordstrom_df$rating))/nrow(nordstrom_df)), "% of Movado products"))
                                     )
                              ),
@@ -120,11 +120,11 @@ shinyUI(
                     h1(tags$b("Amazon's Performance")),
                     h2("Customer Satisfation: Ratings Distribution"), br(),
                     fluidRow(box(width = 6, plotOutput("amazon_stars")),
-                             column(width = 6, infoBox(width = 10, title="Total 5-Star-Rated Products",
-                                                       subtitle = paste0(round(100*sum(amazon_d_df$star == 5.0)/nrow(amazon_d_df)), "% of products listed on Amazon's"),
-                                                       fill = TRUE, value = sum(amazon_d_df$star == 5.0)),
-                                    infoBox(width = 10, color = "yellow", title = "Total Unrated Products", value = sum(amazon_d_df$star == 0.0),
-                                            subtitle = paste0(round(100*sum(amazon_d_df$star == 0.0)/nrow(amazon_d_df)), "% of products listed on Amazon's"))
+                             column(width = 6, infoBox(width = 10, title="Total 5-Star-Rated Products", icon = icon("star"), 
+                                                       subtitle = paste0(round(100*amazon_5_rating/length(unique(amazon_d_df$model_number))), "% of products listed on Amazon's"),
+                                                       value = amazon_5_rating),
+                                    infoBox(width = 10, color = "yellow", title = "Total Unrated Products", value = sum(amazon_d_df$rev_count == 0), icon = icon("comment-slash"),
+                                            subtitle = paste0(round(100*sum(amazon_d_df$rev_count == 0)/nrow(amazon_d_df)), "% of products listed on Amazon's"))
                              )
                     ),
                     h2("Reviews: Presence and Distribution"), br(),
@@ -133,7 +133,7 @@ shinyUI(
                                                        subtitle = paste(max(amazon_d_df$rev_count), "total reviews"))
                              )
                     ),
-                    fluidRow(box(align = "center", width = 5, htmlOutput("amazon_zero_reviews_pie")), 
+                    fluidRow(box(align = "center", width = 5, shiny::htmlOutput("amazon_zero_reviews_pie")), 
                              box(width = 7, plotOutput("amazon_review_count_sans_0"))),
                     h2("Price Distribution"),
                     fluidRow(box(width = 6, plotOutput("amazon_price")), 
@@ -144,9 +144,18 @@ shinyUI(
                              )
                     ),
                     h2("seller list and number of listings"), br(),
-                    fluidRow(dataTableOutput("seller_table")),
+                    fluidRow(selectInput("seller_var", "Variable:",
+                                         s_list),
+                             plotOutput("seller_price"),
+                             DT::dataTableOutput("seller_table")),
                     h2("Watch list and number of sellers"), br(),
-                    fluidRow(dataTableOutput("watches_table"))
+                    fluidRow(selectInput("product_var", "Variable:",
+                                         p_list),
+                             plotOutput("watches_price"),
+                             DT::dataTableOutput("watches_table")),
+                    h2("Full Table"), br(),
+                    fluidRow(
+                      DT::dataTableOutput("full_table"))
                   )
                   ),
           
@@ -154,12 +163,17 @@ shinyUI(
                   fluidPage(
                     h1(tags$b("Movado Compared to Retailers")),
                     h2("Pricing"), br(),
-                    fluidRow(box(width = 6, "Amazon tends to have lower priced products, while Macy's and Movado both have most 
+                    fluidRow(box(width = 5, "Amazon tends to have lower priced products, while Macy's and Movado both have most 
                                  frequently products priced at $695. However, Macy's average product cost is higher 
                                  than Movado's. Further investigation will determine if this is because of a tendency 
                                  to carry more of the higher priced watches of Movado's."), 
-                             tabBox(tabPanel("Mean/Median Price", plotOutput("overview_price")),
-                                    tabPanel("Price Densities", plotOutput("price_density"))
+                             tabBox(width = 7, tabPanel("Mean/Median Price", plotOutput("overview_price")),
+                                    tabPanel("Price Densities", plotOutput("price_density")),
+                                    tabPanel("Price Histogram", align = "center", checkboxGroupInput("select_retailer", "Select Retailer:", 
+                                                                            choices = list("Movado", "Nordstrom", 
+                                                                                           "Macy's", "Amazon"), 
+                                                                            selected = c("Movado", "Amazon"), inline = TRUE),
+                                             plotOutput("price_histogram"))
                              )
                     ),
                     h3("Maximum Price Difference"),
@@ -173,14 +187,18 @@ shinyUI(
                               subtitle = paste0(ifelse(max_diff$price_macys + max_diff$difference == max_diff$price_movado, "Macy's", 
                                                       ifelse(max_diff$price_amazon + max_diff$difference == max_diff$price_movado, "Amazon", "Nordstrom")), ", ",
                                                max_diff[["watch_model"]]), 
-                              #href = ## ADD URL TO MACYS NORDSTROM AND AMAZON
+                              href = ifelse(min(max_diff[c("price_amazon", "price_macys", "price_nordstrom")], na.rm = TRUE) == max_diff$price_macys, macys_df[macys_df$model_number == max_diff$model_number, "url"],
+                                            ifelse(min(max_diff[c("price_amazon", "price_macys", "price_nordstrom")], na.rm = TRUE) == max_diff$price_nordstrom, nordstrom_df[nordstrom_df$model_number == max_diff$model_number, "url"],
+                                                   amazon_df[amazon_df$model_number == max_diff$model_number, "url"]))
                       ),
                       infoBox(fill = TRUE, color = "red", icon = icon("exclamation"), 
                               width = 12, title = "2nd Largest Discount", value = paste0("$", sort(prices_df$difference, decreasing=TRUE)[2]),
                               subtitle = paste0(ifelse(sec_diff$price_macys + sec_diff$difference == sec_diff$price_movado, "Macy's", 
                                                       ifelse(sec_diff$price_amazon + sec_diff$difference == sec_diff$price_movado, "Amazon", "Nordstrom")), ", ",
                                                sec_diff[["watch_model"]]),
-                              #href = ## ADD URL TO MACYS NORDSTROM AND AMAZON
+                              href = ifelse(min(sec_diff[c("price_amazon", "price_macys", "price_nordstrom")], na.rm = TRUE) == sec_diff$price_macys, macys_df[macys_df$model_number == sec_diff$model_number, "url"],
+                                            ifelse(min(sec_diff[c("price_amazon", "price_macys", "price_nordstrom")], na.rm = TRUE) == sec_diff$price_nordstrom, nordstrom_df[nordstrom_df$model_number == sec_diff$model_number, "url"],
+                                                   amazon_df[amazon_df$model_number == sec_diff$model_number, "url"]))
                       ),
                       infoBox(fill = TRUE, color = "red", icon = icon("exclamation"), 
                               width = 12, title = "3rd Largest Discount", value = paste0("$", sort(prices_df$difference, decreasing=TRUE)[3]),
