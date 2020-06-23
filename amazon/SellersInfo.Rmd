@@ -7,6 +7,7 @@ output: html_document
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(DT)
 ```
 
 ## R Markdown
@@ -63,10 +64,19 @@ dff <- df %>% mutate(., price = as.numeric(gsub(",", "", substring(as.character(
 gs = df %>% group_by(seller) %>% summarize(count = n()) %>% filter(., count > 1)%>% arrange(., -count)
 gp = df %>% group_by(product) %>% summarize(count = n()) %>% filter(., count > 1) %>% arrange(., -count)
 
+df <- df %>% group_by(seller) %>% mutate(., c = n())
+ddf <- df %>% distinct(., seller, .keep_all = TRUE)
+ddf <- ddf %>% mutate(., name = paste(as.character(seller), c, sep=" : " ))
+ddf <- ddf[order(-ddf$c),]
+s_list <- setNames(ddf$seller, ddf$name)
+
+s_list
+
+ddf
 gs
 gp
 
-dff
+
 distinct(df)
 
 ```
@@ -90,8 +100,7 @@ gs = df %>% group_by(seller) %>% mutate(., count = n())
 
 
 df_dt <- gs %>% 
-  select(seller, count, product, everything()) %>% 
-  nest()
+  select(seller, count, product, everything())
 
 dat <- df_dt %>% {bind_cols(data_frame(' ' = rep('&oplus;',nrow(.))),.)}
 
@@ -105,7 +114,6 @@ dat
 nested_columns
 not_nested_columns
 not_nested_columns_str
-
 
 # The callback
 # turn rows into child rows and remove from parent
