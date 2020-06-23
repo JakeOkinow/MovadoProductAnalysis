@@ -6,6 +6,7 @@ library(ggthemes)
 library(googleVis)
 library(mltools)
 library(scales)
+library(networkD3)
 # library(flexdashboard)
 
 
@@ -290,7 +291,7 @@ nordstrom_df <- nordstrom_df %>%
            ifelse(model_number == "5679407", "3650097", ifelse(model_number == "5679406", "3600586", real_m_num)))))))) %>% select(-real_m_num)
 
 # ESTABLISH DF OF MOVADO PRODUCTS WITH COMPETITOR PRICING
-prices_df <- left_join(select(movado_df, "model_number", "watch_model", "price"), 
+prices_df <- left_join(select(movado_df, "model_number", "watch_model", "price", "in_stock"), 
                        select(macys_df, "model_number", "price"), by= "model_number", suffix = c("_movado", "_macys")) %>% 
   left_join(select(amazon_df, "model_number", "price_amazon" = "price"),  by = "model_number") %>%
   left_join(select(nordstrom_df, "model_number", "price_nordstrom" = "price"), by = "model_number")
@@ -298,6 +299,15 @@ prices_df <- left_join(select(movado_df, "model_number", "watch_model", "price")
 prices_df$difference <- if_else(is.na(prices_df$price_macys) & is.na(prices_df$price_amazon) & is.na(prices_df$price_nordstrom), 0, 
                                 prices_df$price_movado - pmin(prices_df$price_macys, prices_df$price_amazon, prices_df$price_nordstrom, na.rm = TRUE))
 
+full_prices_df <- full_join(select(movado_df, "model_number", "watch_model", "price", "in_stock"), 
+                            select(macys_df, "model_number", "price"), by= "model_number", suffix = c("_movado", "_macys")) %>% 
+  full_join(select(amazon_df, "model_number", "price_amazon" = "price"),  by = "model_number") %>%
+  full_join(select(nordstrom_df, "model_number", "price_nordstrom" = "price"), by = "model_number")
+
+full_prices_df$difference <- if_else(is.na(full_prices_df$price_movado), 0, 
+                                     ifelse(is.na(full_prices_df$price_macys) & is.na(full_prices_df$price_amazon) & is.na(full_prices_df$price_nordstrom), 0, 
+                                            full_prices_df$price_movado - pmin(full_prices_df$price_macys, full_prices_df$price_amazon, 
+                                                                               full_prices_df$price_nordstrom, na.rm = TRUE)))
 # EXTRACT 1, 2, 3 TOP DIFFERENCES IN PRICE
 max_diff <- prices_df[prices_df["difference"] == max(prices_df$difference, na.rm = TRUE), ]
 sec_diff <- prices_df[prices_df["difference"] == sort(prices_df$difference, decreasing=TRUE)[2], ]
@@ -309,8 +319,10 @@ macys_df <- macys_df %>% mutate(clean_text = gsub("[This review was collected as
                                                                    avg_w_count = ifelse(review_count == 0, 0, review_w_count/review_count))
 
 nordstrom_df <- nordstrom_df %>% mutate(clean_text = gsub("Sweepstakes entry\\n", "", nordstrom_df$review_text, fixed = TRUE)) %>%
-  mutate(clean_text = gsub("\\w\\w\\w\\w? \\d\\d?, 20\\d\\d", "", clean_text, perl = TRUE)) %>% mutate(clean_text = gsub('\\n', " ", clean_text)) %>% 
+  mutate(clean_text = gsub("\\w\\w\\w\\w? \\d\\d?, 20\\d\\d", "", clean_text, perl = TRUE)) %>% mutate(clean_text = gsub('\\n', " ", clean_text, fixed = TRUE)) %>% 
   mutate(review_w_count = lengths(strsplit(clean_text, " ")) - review_count, avg_w_count = ifelse(review_count == 0, 0, review_w_count/review_count))
+
+
 
 
 

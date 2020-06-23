@@ -113,24 +113,70 @@ function(input, output, session){
   })
   
   output$differences_table <- DT::renderDataTable(
-    datatable(colnames = c("Model Number", "Watch Model", "Movado's Price", "Macy's Price", "Amazon's Price", 
+    datatable(colnames = c("Model Number", "Watch Model", "Movado's Price", "Movado.com Stock", "Macy's Price", "Amazon's Price", 
                            "Nordstrom's Price", "Max Difference"), prices_df, options=list(
                              initComplete = JS(
                                "function(settings, json) {",
-                               "$(this.api().table().header()).css({'font-size': '80%'});",
+                               "$(this.api().table().header()).css({'font-size': '61%'});",
                                "}"))) %>% 
-      formatStyle(columns = c(T, T, T, T, T, T, T), fontSize = "90%", backgroundSize = '70%', backgroundRepeat = 'no-repeat', backgroundPosition = 'center') %>% 
+      formatStyle(columns = c(T, T, T, T, T, T, T, T), fontSize = "85%", backgroundSize = '75%', backgroundRepeat = 'no-repeat', backgroundPosition = 'center') %>% 
+      formatStyle("difference", background = styleColorBar(prices_df$difference, '#dd9787')) %>% 
       formatCurrency(columns = c("price_movado", "price_macys", "price_amazon", "price_nordstrom", "difference"), currency ="$")
   )
+  
+  output$sankey_avail <- renderSankeyNetwork({
+    links <- data.frame(stringsAsFactors = FALSE, 
+      "source" = c("All Unique Products Scraped", "All Unique Products Scraped", "All Unique Products Scraped", "All Unique Products Scraped", 
+                   "All Unique Products Scraped", "All Unique Products Scraped"), 
+      "target" = c("Only Movado.com", "Only Nordstrom.com", "Only Macys.com", "Only Amazon.com", "Movado.com and >= 1 Retailer", "Not avail on Movado.com, Only at Retailer"),
+      "value" = c(length(unique(full_prices_df[full_prices_df$in_stock == "In Stock" & is.na(full_prices_df["price_macys"]) & 
+                                                              is.na(full_prices_df["price_nordstrom"]) & is.na(full_prices_df["price_amazon"]), "model_number"])), 
+                  length(unique(full_prices_df[(full_prices_df$in_stock != "In Stock" | is.na(full_prices_df$in_stock)) & is.na(full_prices_df["price_macys"]) & 
+                                                 is.na(full_prices_df["price_amazon"]), "model_number"])),
+                  length(unique(full_prices_df[(full_prices_df$in_stock != "In Stock" | is.na(full_prices_df$in_stock)) & is.na(full_prices_df["price_nordstrom"]) & 
+                                                 is.na(full_prices_df["price_amazon"]), "model_number"])), 
+                  length(unique(full_prices_df[(full_prices_df$in_stock != "In Stock" | is.na(full_prices_df$in_stock)) & is.na(full_prices_df["price_macys"]) & 
+                                                 is.na(full_prices_df["price_nordstrom"]), "model_number"])), 
+                  length(unique(full_prices_df[full_prices_df$in_stock == "In Stock" & -(is.na(full_prices_df["price_macys"]) & is.na(full_prices_df["price_nordstrom"]) &
+                                                 is.na(full_prices_df["price_amazon"])), "model_number"])), 
+                  length(unique(full_prices_df[(full_prices_df$in_stock != "In Stock" | is.na(full_prices_df$in_stock)) & 
+                                                 !(is.na(full_prices_df["price_macys"]) & is.na(full_prices_df["price_nordstrom"]) &
+                                                                                           is.na(full_prices_df["price_amazon"])), "model_number"]))
+                  )
+    )
+    nodes <-data.frame(name = c(links$source, links$target) %>% unique())
+    links$IDsource = match(links$source, nodes$name) - 1
+    links$IDtarget = match(links$target, nodes$name) - 1
+    sankeyNetwork(Links = links, Nodes = nodes, Source = "IDsource",
+                  Target = "IDtarget", Value = "value", NodeID = "name", sinksRight = TRUE, 
+                  fontSize = 15, nodeWidth = 30)
+  })
   
   output$word_count <- renderPlot({
     colors = c("Nordstrom" = "#9ec2e1", "Macy's" = "#171b64")
     ggplot() + geom_density(aes(x=macys_df[macys_df$avg_w_count != 0, "avg_w_count"], alpha = 2, fill = "Macy's"), outline.type = "full") + 
       geom_density(aes(x=nordstrom_df[nordstrom_df$avg_w_count != 0, "avg_w_count"], alpha = 2, fill = "Nordstrom"), outline.type = "full") + 
-      scale_fill_manual(values = colors) + ggtitle("Review Word Count Densities, per Retailer") + 
+      scale_fill_manual(values = colors) + ggtitle("Review Word Count Densities, per Retailer (Excludes Unreviewed Products)") + 
       labs(x = "Word Count", y = "Density", fill = "Legend")  +
       theme(legend.justification=c(1,1), legend.position=c(1,1)) + guides(alpha = FALSE)
   })
+  
+  output$avg_word_count <- renderPlot(
+    data.frame("Retailer" = c("Macy's", "Nordstrom"), "Average" = c(mean(macys_df$avg_w_count), mean(nordstrom_df$avg_w_count))) %>% 
+      ggplot(aes(x = Retailer, y=Average, fill = Retailer)) + geom_col(alpha = .8) + 
+      geom_text(aes(label = round(Average, 1), vjust = 2), color = c("white", "black")) + 
+      scale_fill_manual(values = c("Nordstrom" = "#9ec2e1", "Macy's" = "#171b64")) + ggtitle("Average Word Count, per Retailer (All Products Included)")
+  )
+  
+  output$missing_reviews <- renderPlot(
+    data.frame("Retailer" = c("Macy's", "Nordstrom", "Amazon"), "Unreviewed" = c(sum(macys_df$review_count == 0), 
+                sum(nordstrom_df$review_count == 0), sum(amazon_df$rev_count == 0)), 
+               "Reviewed" = c(sum(macys_df$review_count != 0), sum(nordstrom_df$review_count != 0), sum(amazon_df$rev_count != 0))) %>% 
+      pivot_longer(cols = c(Reviewed, Unreviewed)) %>% 
+      ggplot(aes(x = Retailer)) + geom_col(aes(y = value, fill = name), position = position_fill(reverse = TRUE)) + 
+      labs(y = "Percentage", fill = "Legend") + scale_fill_manual(values = c("Unreviewed" = "#dd9787", "Reviewed" = "#678d58")) + 
+      ggtitle("Proportion of Products with Reviews, per Retailer")
+  )
   
   output$price_graph <- renderGvis(
     prices_df %>% filter(watch_model == input$select_model) %>% 

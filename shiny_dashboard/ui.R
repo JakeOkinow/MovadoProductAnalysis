@@ -162,13 +162,12 @@ shinyUI(
                                     tabPanel("Price Densities", plotOutput("price_density"))
                              )
                     ),
-                    h2("Discounts"),
+                    h3("Maximum Price Difference"),
                     fluidRow(column(width = 4, 
-                                    box(width = 12, p("To the left is a table combining all of Movado.com's products to those found on Nordstrom's, Macy's, and Amazon's websites.
-                                          The table can be organized by model number, model title, or seller's prices.", br(), br(), "The final column is the difference between 
-                                          Movado.com's price and the lowest price found across retailers. When organized by differences in descending order, the 
-                                          most discounted items can be found. During certain sales while building this dashboard, ", tags$b("the largest difference has ranged from 
-                                          $600 to even almost $900 cheaper than Movado's listed price."))),
+                                    box(width = 12, p("To the left is a table combining all of Movado.com's products to those found on Nordstrom's, Macy's, and Amazon's websites.", br(), br(), 
+                                          "The final column is the difference between 
+                                          Movado.com's price and the lowest price found across retailers. During certain sales while building this dashboard, ", tags$b("the largest difference has ranged from 
+                                          $500 to even almost $900 cheaper than Movado's listed price."))),
                       infoBox(fill = TRUE, color = "red", icon = icon("exclamation"), 
                               width = 12, title = "Largest Discount", value = paste0("$", max(prices_df$difference, na.rm = TRUE)),
                               subtitle = paste0(ifelse(max_diff$price_macys + max_diff$difference == max_diff$price_movado, "Macy's", 
@@ -191,19 +190,33 @@ shinyUI(
                               href = ifelse(min(thrd_diff[c("price_amazon", "price_macys", "price_nordstrom")], na.rm = TRUE) == thrd_diff$price_nordstrom, nordstrom_df[nordstrom_df$model_number == thrd_diff$model_number, "url"],
                                             ifelse(min(thrd_diff[c("price_amazon", "price_macys", "price_nordstrom")], na.rm = TRUE) == thrd_diff$price_macys, macys_df[macys_df$model_number == thrd_diff$model_number, "url"],
                                                    amazon_df[amazon_df$model_number == thrd_diff$model_number, "url"]))
-                      )), 
-                      column(width = 8, box(width = 12, DT::dataTableOutput("differences_table")))
+                            )
+                      ), 
+                      column(width = 8, box(width = 12, DT::dataTableOutput("differences_table"))),
+                      fluidRow(
+                        box(solidHeader = TRUE, width = 12, title = "A Note About Availability", collapsible = TRUE, collapsed = FALSE, background = "navy",
+                            box(background= "navy", p("There is a total of ",
+                              as.character(length(unique(full_prices_df[(full_prices_df$in_stock != "In Stock" | is.na(full_prices_df$in_stock)) & !(is.na(full_prices_df["price_macys"]) & 
+                                                                                                                                                       is.na(full_prices_df["price_nordstrom"]) & is.na(full_prices_df["price_amazon"])), "model_number"]))), 
+                              "products that can only be purchased on another retailer's site due to being out of stock or unlisted on Movado.com.", br(), br(), "In addition, there are ", 
+                              as.character(length(unique(full_prices_df[full_prices_df$in_stock == "In Stock" & is.na(full_prices_df["price_macys"]) & 
+                                                                          is.na(full_prices_df["price_nordstrom"]) & is.na(full_prices_df["price_amazon"]), "model_number"]))),
+                              "products that can ", tags$i(" ONLY "), "be found at Movado.com. ", br())), 
+                            box(sankeyNetworkOutput("sankey_avail"))),
+                        
+                      )
                     ),
                     h3("Discounts by Retailer"),
                     fluidRow(
                       column(width = 6, box(width = 12, 
-                                            p("We can also look at average savings by retailer. ", tags$b("While sales come and go, there are a total of ", 
-                                              as.character(nrow(prices_df[prices_df$difference == 0 & !(is.na(prices_df["price_macys"]) 
-                                                                                                        & is.na(prices_df["price_nordstrom"]) & 
-                                                                                                          is.na(prices_df["price_amazon"])), ])), 
-                                              " products that Movado.com sells where there is not a discounted price from Amazon, Nordstrom, or Macy's."), 
+                                            p("We can also look at average savings by retailer. While sales come and go, ", tags$b("there are a total of ", 
+                                              as.character(length(unique(full_prices_df[full_prices_df$difference == 0 & full_prices_df$in_stock == "In Stock" & !(is.na(full_prices_df["price_macys"]) 
+                                                                                                        & is.na(full_prices_df["price_nordstrom"]) & 
+                                                                                                          is.na(full_prices_df["price_amazon"])), "model_number"]))), 
+                                              " products that Movado.com sells that can only be found at full price on retailers' sites."), 
                                               "For the products whose prices do not match Movado.com, their average savings are 
-                                              captured in the value boxes to the right. ", br(), br(), "On Amazon, the average discount one can find is", 
+                                              captured in the value boxes to the right. ", br(), br(), h4("Amazon's Lower Discount"), 
+                                              "On Amazon, the average discount one can find is", 
                                               paste0("$", round(mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price_amazon"], na.rm = TRUE), 2), "."), 
                                               "While Amazon can often be a bargain site, surprisingly Amazon's average discount is lower than the other two retailers.
                                               This may be that Macy's and Nordstrom post large sales of 20% - 30% off merchandise and can 
@@ -225,8 +238,20 @@ shinyUI(
                     ),
                     h2("Reviews"),
                     fluidRow(
-                      box(width = 8, plotOutput("word_count")),
-                      box(width = 4, p("Text about word count of products"))
+                      tabBox(width = 7,  tabPanel("Products Left Unreviewed", plotOutput("missing_reviews")),
+                             tabPanel("Word Count Densities", plotOutput("word_count")),
+                             tabPanel("Average Word Count", plotOutput("avg_word_count"))),
+                      box(width = 5, p(h4("Products Left Unreviewed"), "While Macy's and Nordstrom hover around 50% customer interaction for reviewing, ",  
+                                       tags$b("Amazon leads with over 75% customer engagement post-purchase."), br(), br(),  h4("Word Count Densities"), "In terms of time 
+                                       or thought spent reviewing a product, we can approximate dedicated customer engagement, or customers who are
+                                        willing to spend some of their time writing well-rounded and insightful reviews, 
+                                       through word count. Yet surprisingly, there is a remarkably similar distribution of word counts across 
+                                       Nordstrom and Macy's. This might tell us that a very similar make-up of customers are likely to shop and 
+                                       review at both Macy's or Nordstrom, that the two shopping populations are rather similar.", br(), br(),
+                                       h4("Average Word Count"), "When including all Movado products sold on respective retailer websites, 
+                                       both those with and without reviews, ", tags$b("Nordstrom holds the edge just slightly above Macy's with 
+                                                                                      about four more words on average per review written.")
+                                       ))
                     ),
                     
                     selectInput("select_model", label = "Select Model:", choices = sort(unique(prices_df$watch_model))),
