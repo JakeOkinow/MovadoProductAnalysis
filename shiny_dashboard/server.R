@@ -31,30 +31,30 @@ function(input, output, session){
   )
   
   output$gauge_movado_r <- flexdashboard::renderGauge(
-    flexdashboard::gauge(0, label = "Movado.com", min = 0, max = 5000, 
-                         flexdashboard::gaugeSectors(success = c(2000, 5000), 
-                                                     warning = c(500, 2000),
+    flexdashboard::gauge(0, label = "Movado.com", min = 0, max = 1500, 
+                         flexdashboard::gaugeSectors(success = c(1000, 1500), 
+                                                     warning = c(500, 1000),
                                                      danger = c(0, 500)))
   )
   
   output$gauge_macys_r <- flexdashboard::renderGauge(
-    flexdashboard::gauge(sum(macys_df$review_count), label = "Macys.com", min = 0, max = 5000, 
-                         flexdashboard::gaugeSectors(success = c(2000, 5000), 
-                                                     warning = c(500, 2000),
+    flexdashboard::gauge(sum(macys_df$review_count), label = "Macys.com", min = 0, max = 1500, 
+                         flexdashboard::gaugeSectors(success = c(1000, 1500), 
+                                                     warning = c(500, 1000),
                                                      danger = c(0, 500)))
   )
   
   output$gauge_nordstrom_r <- flexdashboard::renderGauge(
-    flexdashboard::gauge(sum(nordstrom_df$review_count), label = "Nordstrom.com", min = 0, max = 5000, 
-                         flexdashboard::gaugeSectors(success = c(2000, 5000), 
-                                                     warning = c(500, 2000),
+    flexdashboard::gauge(sum(nordstrom_df$review_count), label = "Nordstrom.com", min = 0, max = 1500, 
+                         flexdashboard::gaugeSectors(success = c(1000, 1500), 
+                                                     warning = c(500, 1000),
                                                      danger = c(0, 500)))
   )
   
   output$gauge_amazon_r <- flexdashboard::renderGauge(
-    flexdashboard::gauge(sum(unique(amazon_df$rev_count)), label = "Amazon.com", min = 0, max = 5000, 
-                         flexdashboard::gaugeSectors(success = c(2000, 5000), 
-                                                     warning = c(500, 2000),
+    flexdashboard::gauge(sum(unique(amazon_df$rev_count)), label = "Amazon.com", min = 0, max = 1500, 
+                         flexdashboard::gaugeSectors(success = c(1000, 1500), 
+                                                     warning = c(500, 1000),
                                                      danger = c(0, 500)))
   )
   
@@ -87,18 +87,50 @@ function(input, output, session){
   )
   
   # INSIGHT
-  output$overview_price <- renderPlot(
+  output$overview_price <- renderPlot({
+    colors = c("Movado" = "#8e0000", "Macy's" = "#171b64", "Nordstrom" = "#9ec2e1", "Amazon" = "#e5a0a0")
     data.frame("Mean Prices" = c(round(mean(movado_df$price), 2), round(mean(macys_df$price), 2), 
                             round(mean(nordstrom_df$price), 2), round(mean(amazon_df$price), 2)),
           "Median Prices" = c(round(median(movado_df$price), 2), round(median(macys_df$price), 2), 
                               round(median(nordstrom_df$price), 2), round(median(amazon_df$price), 2)),
           "Seller"=c("Movado", "Macy's", "Nordstrom", "Amazon")) %>% 
-      ggplot(aes(x = Median.Prices, y = Mean.Prices, color=Seller)) + geom_point(size=9) + 
+      ggplot(aes(x = Median.Prices, y = Mean.Prices, color = Seller)) + geom_point(size=9) + 
       geom_text(aes(label=Seller), vjust=-2) + coord_cartesian(xlim = c(350, 750), ylim = c(450, 850)) +
       xlab("Median Prices") + ylab("Mean Prices") + ggtitle("Comparing Mean and Median Prices") +
       theme(legend.position="none") + guides(size=FALSE) + scale_y_continuous(labels=dollar_format(prefix = "$")) +
-      scale_x_continuous(labels=dollar_format(prefix = "$"))
+      scale_x_continuous(labels=dollar_format(prefix = "$")) + scale_color_manual(values = colors) 
+  })
+  
+  output$price_density <- renderPlot({
+    colors = c("Movado" = "#8e0000", "Macy's" = "#171b64", "Nordstrom" = "#9ec2e1", "Amazon" = "#ffb2b2")
+    ggplot() + geom_density(data = movado_df, aes(x = price, alpha = .8, fill = "Movado"), outline.type = "full") + 
+      geom_density(data = nordstrom_df, aes(x = price, alpha = .8, fill = "Nordstrom"), outline.type = "full") + 
+      geom_density(data = amazon_df, aes(x = price, alpha = .8, fill = "Amazon"), outline.type = "full") + 
+      geom_density(data = macys_df, aes(x = price, alpha = .8, fill = "Macy's"), outline.type = "full") + 
+      ggtitle("Price Density by Retailer") + guides(alpha = FALSE) + 
+      labs(x = "Price", y = "Density", fill = "Legend") + theme(legend.justification=c(1,1), legend.position=c(1,1)) +
+      scale_fill_manual(values = colors) + scale_x_continuous(labels=dollar_format(prefix = "$"))
+  })
+  
+  output$differences_table <- DT::renderDataTable(
+    datatable(colnames = c("Model Number", "Watch Model", "Movado's Price", "Macy's Price", "Amazon's Price", 
+                           "Nordstrom's Price", "Max Difference"), prices_df, options=list(
+                             initComplete = JS(
+                               "function(settings, json) {",
+                               "$(this.api().table().header()).css({'font-size': '80%'});",
+                               "}"))) %>% 
+      formatStyle(columns = c(T, T, T, T, T, T, T), fontSize = "90%", backgroundSize = '70%', backgroundRepeat = 'no-repeat', backgroundPosition = 'center') %>% 
+      formatCurrency(columns = c("price_movado", "price_macys", "price_amazon", "price_nordstrom", "difference"), currency ="$")
   )
+  
+  output$word_count <- renderPlot({
+    colors = c("Nordstrom" = "#9ec2e1", "Macy's" = "#171b64")
+    ggplot() + geom_density(aes(x=macys_df[macys_df$avg_w_count != 0, "avg_w_count"], alpha = 2, fill = "Macy's"), outline.type = "full") + 
+      geom_density(aes(x=nordstrom_df[nordstrom_df$avg_w_count != 0, "avg_w_count"], alpha = 2, fill = "Nordstrom"), outline.type = "full") + 
+      scale_fill_manual(values = colors) + ggtitle("Review Word Count Densities, per Retailer") + 
+      labs(x = "Word Count", y = "Density", fill = "Legend")  +
+      theme(legend.justification=c(1,1), legend.position=c(1,1)) + guides(alpha = FALSE)
+  })
   
   output$price_graph <- renderGvis(
     prices_df %>% filter(watch_model == input$select_model) %>% 

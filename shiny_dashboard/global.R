@@ -304,6 +304,15 @@ sec_diff <- prices_df[prices_df["difference"] == sort(prices_df$difference, decr
 thrd_diff <- prices_df[prices_df["difference"] == sort(prices_df$difference, decreasing=TRUE)[3], ]
 
 # FIND WORD COUNTS OF REVIEWS
-# macys_df %>% mutate(avg_length = )
+macys_df <- macys_df %>% mutate(clean_text = gsub("[This review was collected as part of a promotion.]", "", macys_df$review_text, fixed = TRUE)) %>% 
+  mutate(clean_text = gsub(",|\n|  ", " ", clean_text)) %>% mutate(review_w_count = lengths(strsplit(clean_text, " ")), 
+                                                                   avg_w_count = ifelse(review_count == 0, 0, review_w_count/review_count))
+
+nordstrom_df <- nordstrom_df %>% mutate(clean_text = gsub("Sweepstakes entry\\n", "", nordstrom_df$review_text, fixed = TRUE)) %>%
+  mutate(clean_text = gsub("\\w\\w\\w\\w? \\d\\d?, 20\\d\\d", "", clean_text, perl = TRUE)) %>% mutate(clean_text = gsub('\\n', " ", clean_text)) %>% 
+  mutate(review_w_count = lengths(strsplit(clean_text, " ")) - review_count, avg_w_count = ifelse(review_count == 0, 0, review_w_count/review_count))
+
+
+
 
 
