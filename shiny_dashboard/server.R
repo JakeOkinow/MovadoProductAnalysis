@@ -372,6 +372,18 @@ function(input, output, session){
       ggtitle("Proportion of Products with Reviews, per Retailer")
   )
   
+  output$review_word_cloud <- renderImage({
+    outfile <- tempfile(fileext = '.png')
+    png(outfile, width=1350, height=1125, res = 300, bg="transparent")
+    wordcloud(max.words = 100, words = word_freq_df$word, freq = word_freq_df$frequency, scale=c(3.5, 0.3),
+              color = wesanderson::wes_palette(type = "continuous", name = "Darjeeling1"))
+    dev.off()
+    list(src = outfile,
+         contentType = 'image/png',
+         width = 450,
+         height = 375)
+  })
+  
   output$incorrect_nordstrom <- DT::renderDataTable(
     nordstrom_df %>% filter(bullet_d_case_d != case_diameter) %>% 
       left_join(select(movado_df, movado_url = url, model_number), by = "model_number") %>% 

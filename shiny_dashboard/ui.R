@@ -280,6 +280,12 @@ shinyUI(
                                                                                       about four more words on average per review written.")
                                        ))
                     ),
+                    h3("Frequent Words"),
+                    fluidRow(
+                      column(width = 6, align = "center", box(background = "navy", width = 12, imageOutput("review_word_cloud"))),
+                      # box(background = "navy", width = 6, plotOutput("review_word_cloud")),
+                      box("This will discuss popular words used in reviews")
+                    ),
                     h2("Product Descriptions"),
                     fluidRow(
                       box(width =4, "This will find how many Nordstrom descriptions are incorrect. How many descriptions say 'museum dot'."),

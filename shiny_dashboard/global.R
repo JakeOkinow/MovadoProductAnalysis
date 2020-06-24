@@ -6,6 +6,9 @@ library(ggthemes)
 library(scales)
 library(networkD3)
 library(googleVis)
+library(wordcloud)
+library(stopwords)
+# library(wesanderson)
 # library(flexdashboard)
 
 
@@ -295,6 +298,34 @@ macys_df <- macys_df %>% mutate(clean_text = gsub("[This review was collected as
 nordstrom_df <- nordstrom_df %>% mutate(clean_text = gsub("Sweepstakes entry\\n", "", nordstrom_df$review_text, fixed = TRUE)) %>%
   mutate(clean_text = gsub("\\w\\w\\w\\w? \\d\\d?, 20\\d\\d", "", clean_text, perl = TRUE)) %>% mutate(clean_text = gsub('\\n', " ", clean_text, fixed = TRUE)) %>% 
   mutate(review_w_count = lengths(strsplit(clean_text, " ")) - review_count, avg_w_count = ifelse(review_count == 0, 0, review_w_count/review_count))
+
+
+# FIND POPULAR WORDS
+popular_review_words <- data.frame()
+
+macys_words <- macys_df %>% 
+  mutate(clean_text = gsub("[This review was collected as part of a promotion.]", "", macys_df$review_text, fixed = TRUE)) %>% 
+  mutate(clean_text = gsub("'", "", clean_text, fixed = FALSE)) %>% 
+  mutate(clean_text = gsub("\\W", " ", clean_text, fixed = FALSE)) %>% 
+  mutate(review_words = strsplit(str_to_lower(clean_text), " +")) %>% 
+  select(review_words)
+word_freq_macys <- table(unlist(macys_words))
+word_freq_df <- cbind.data.frame("word" = names(word_freq_macys), "frequency" = as.integer(word_freq_macys))
+
+nordstrom_words <- nordstrom_df %>% 
+  mutate(clean_text = gsub("Sweepstakes entry\\n", "", nordstrom_df$review_text, fixed = TRUE)) %>%
+  mutate(clean_text = gsub("\\w\\w\\w\\w? \\d\\d?, 20\\d\\d", "", clean_text, perl = TRUE)) %>% 
+  mutate(clean_text = gsub('\\n', " ", clean_text, fixed = TRUE)) %>% 
+  mutate(clean_text = gsub("\\W", " ", clean_text, fixed = FALSE)) %>% 
+  mutate(review_words = strsplit(str_to_lower(clean_text), " +")) %>%
+  select(review_words)
+word_freq_nordstrom <- table(unlist(nordstrom_words))
+word_freq_df <- rbind.data.frame(word_freq_df, cbind.data.frame("word" = names(word_freq_nordstrom), "frequency" = as.integer(word_freq_nordstrom)))
+
+word_freq_df <- word_freq_df %>% group_by(word) %>% summarise(frequency = sum(frequency)) %>% 
+  arrange(desc(frequency)) %>% filter(!(word %in% c(stopwords(source = "smart"), 
+                                                    "watch", "watches", "purchase", "purchased", 
+                                                    "day", "made", "worn", "movado")))
 
 
 
