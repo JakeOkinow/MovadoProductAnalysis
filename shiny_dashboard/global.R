@@ -34,24 +34,30 @@ collect_model_num <- function(x, y){
     } else {
       return("Unknown")}}
 
-
+# this is to collect the case diameter as per the title
 collect_case_diameter <- function(x){
-  m <- regexpr("\\d{2}mm", x, perl=FALSE, fixed=FALSE)
-  if (m[1] != -1){return(as.numeric(gsub("mm", "", regmatches(x, m))))
+  m <- regexpr("\\d{2}.?\\d?mm", x)
+  if (m[1] != -1){return(regmatches(x, m))
+  } else {return("Unknown")}}
+
+# specifically designed for Nordstrom's bullet_details, to compare descrepancies
+collect_case_diameter_from_details <- function(x){
+  m <- regexpr("^\\d{2}.?\\d?mm", x)
+  if (m[1] != -1){return(regmatches(x, m))
   } else {return("Unknown")}}
 
 
 collect_crystal <- function(x){
-   m <- regexpr("k.?1|sapphire|gorilla glass|crystal", x, ignore.case = TRUE, perl=FALSE, fixed=FALSE)
+   m <- regexpr("k.?1|sapphire|gorilla glass|crystal", x, ignore.case = TRUE)
     if (m[1] != -1){ return(ifelse(regmatches(x, m) == "crystal", "K1", regmatches(x, m)))
     } else {return("Unknown")}}
 
 
 collect_dial <- function(x){
   v <- c()
-  m <- regexpr("mother.*pearl", x, ignore.case = TRUE, perl=FALSE, fixed=FALSE)
-  n <- regexpr("diamonds", x, ignore.case = TRUE, perl=FALSE, fixed=FALSE)
-  o <- regexpr("museum.*dot", x, ignore.case = TRUE, perl=FALSE, fixed=FALSE)
+  m <- regexpr("mother.*pearl", x, ignore.case = TRUE)
+  n <- regexpr("diamonds", x, ignore.case = TRUE)
+  o <- regexpr("museum.*dot", x, ignore.case = TRUE)
   if (m[1] != -1){v <- regmatches(x, m)}
   if (n[1] != -1){v <- paste(v, regmatches(x, n))}
   if (o[1] != -1){v <- paste(v, "Museum with concave dot")}
@@ -62,12 +68,12 @@ collect_dial <- function(x){
 
 collect_collection <- function(x){
   x = str_to_lower(x)
-  m <- regexpr("movado bold|meusem classic|connect 2.0", x, perl=FALSE, fixed=FALSE)
-  p <- regexpr("movado ultra slim|modern 47|movado face", x, perl=FALSE, fixed=FALSE)
-  s <- regexpr("heritage series|musem sport|series 800", x, perl=FALSE, fixed=FALSE)
-  w <- regexpr("esperanze|sapphire|red label", x, perl=FALSE, fixed=FALSE)
-  z <- regexpr("faceto|kora|la nouvelle", x, perl=FALSE, fixed=FALSE)
-  c <- regexpr("vizio|strato|1881 auotmatic", x, perl=FALSE, fixed=FALSE)
+  m <- regexpr("movado bold|meusem classic|connect 2.0", x)
+  p <- regexpr("movado ultra slim|modern 47|movado face", x)
+  s <- regexpr("heritage series|musem sport|series 800", x)
+  w <- regexpr("esperanze|sapphire|red label", x)
+  z <- regexpr("faceto|kora|la nouvelle", x)
+  c <- regexpr("vizio|strato|1881 auotmatic", x)
   if (m[1] != -1){
     return(regmatches(x, m))
   } else if (p[1] != -1){
@@ -144,6 +150,7 @@ nordstrom_df["crystal"] <- sapply(nordstrom_df$bullet_details, collect_crystal)
 nordstrom_df["dial"] <- trimws(sapply(nordstrom_df$description, collect_dial, simplify = TRUE, USE.NAMES = FALSE))
 nordstrom_df["collection"] <- sapply(nordstrom_df$watch_model, collect_collection_nordstrom)
 nordstrom_df["movement"] <- sapply(nordstrom_df$watch_model, collect_movement)
+nordstrom_df["bullet_d_case_d"] <- sapply(nordstrom_df$bullet_details, collect_case_diameter_from_details)
 
 amazon_df <- read.csv("data/amazonsellers copy.csv", stringsAsFactors = FALSE) %>% 
   mutate(price = as.numeric(gsub(",|\\$", "", price))) %>% 

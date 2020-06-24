@@ -5,12 +5,13 @@ shinyUI(
       dashboardSidebar(
           sidebarMenu(
             menuItem("Home", tabName = "home", icon = icon("home")),
-            menuItem("Retailers",
+            menuItem("Retailers", icon = icon("tags"),
               menuSubItem("Macy's", tabName = "macys"),
               menuSubItem("Nordstrom", tabName = "nordstrom"),
               menuSubItem("Amazon", tabName = "amazon")
                     ),
-            menuItem("Insights", tabName = "insights")
+            menuItem("Product Comparison", tabName = "comparison", icon = icon("barcode")),
+            menuItem("Insights", tabName = "insights", icon = icon("info-circle"))
           )
       ),
       dashboardBody(
@@ -20,7 +21,7 @@ shinyUI(
                     fluidRow(column(width = 8, offset=2, align = "center", 
                                     box(width = 12, background = "black", align = "center", h1(tags$b("MOVADO INSIGHTS\n"), style = "font-size:55px;"),
                                                     h2(tags$b("A Look into Retailers and Resellers")),
-                                                    br(), #img(src = "", style="width: 100%"),
+                                                    br(),
                                                     h5("Research and modeling by Victoria Lowery and Jake Okinow")))),
                     fluidRow(column(width = 10, offset=1, align="center", box(height = 220, width = 12, align = "center",  background = "black",
                                  h2("Total Number of Products Scraped"),
@@ -158,7 +159,15 @@ shinyUI(
                       DT::dataTableOutput("full_table"))
                   )
                   ),
-          
+          tabItem(tabName = "comparison",
+                  selectInput("select_model", label = "Select Model:", choices = sort(unique(prices_df$watch_model))),
+                  fluidRow(box(width = 6, height=400, title = "Mean Prices Per Retailer", htmlOutput("price_graph")),
+                           box(width = 6, height=400, title = "Price Against Frequency from a Seller", htmlOutput("price_bubble"))
+                  ),
+                  selectizeInput("select_prod_num", label = "Select Product Number:", choices = sort(unique(prices_df$model_number))),
+                  fluidRow(box(width = 6, title = "Retailers' Price by Product Number", htmlOutput("prod_num_graph")),
+                           infoBoxOutput("selected_prod_num"))
+          ),
           tabItem(tabName = "insights",
                   fluidPage(
                     h1(tags$b("Movado Compared to Retailers")),
@@ -271,14 +280,12 @@ shinyUI(
                                                                                       about four more words on average per review written.")
                                        ))
                     ),
-                    
-                    selectInput("select_model", label = "Select Model:", choices = sort(unique(prices_df$watch_model))),
-                    fluidRow(box(width = 6, height=400, title = "Mean Prices Per Retailer", htmlOutput("price_graph")),
-                             box(width = 6, height=400, title = "Price Against Frequency from a Seller", htmlOutput("price_bubble"))
+                    h2("Product Descriptions"),
+                    fluidRow(
+                      box(width =4, "This will find how many Nordstrom descriptions are incorrect."),
+                      box(width = 8, DT::dataTableOutput("incorrect_nordstrom"))
                     ),
-                    selectizeInput("select_prod_num", label = "Select Product Number:", choices = sort(unique(prices_df$model_number))),
-                    fluidRow(box(width = 6, title = "Retailers' Price by Product Number", htmlOutput("prod_num_graph")),
-                             infoBoxOutput("selected_prod_num"))
+            
                   )
           )
         )

@@ -218,6 +218,51 @@ function(input, output, session){
     amazon_df
   )
   
+  # PRODUCT COMPARISON
+  output$price_graph <- googleVis::renderGvis(
+    prices_df %>% filter(watch_model == input$select_model) %>% 
+      summarise(Movado = mean(price_movado, na.rm = TRUE), "Macy's" = mean(price_macys, na.rm = TRUE), 
+                "Amazon" = mean(price_amazon, na.rm = TRUE), "Nordstrom" = mean(price_nordstrom, na.rm = TRUE)) %>% 
+      pivot_longer(cols = c("Movado", "Amazon", "Macy's", "Nordstrom")) %>% 
+      googleVis::gvisColumnChart(xvar = "name", yvar = "value", 
+                                 options=list(width="auto", height="330px", bar = "{groupWidth: '95%'}", 
+                                              legend = "{position: 'none'}", colors = "['#55c821']", 
+                                              vAxis = "{format: 'currency', title: 'Price'}",
+                                              hAxis = "{title: 'Retailer'}"))
+  )
+  
+  output$price_bubble <- googleVis::renderGvis(
+    prices_df %>% filter(watch_model == input$select_model) %>% 
+      select(Model = watch_model, Movado = price_movado, "Macy's" = price_macys, "Amazon" = price_amazon, "Nordstrom" = price_nordstrom) %>% 
+      pivot_longer(names_to = "Retailer", values_to = "Price", cols = c("Movado", "Amazon", "Macy's", "Nordstrom")) %>% 
+      mutate(Count = if_else(Retailer == "Movado", sum(Retailer == "Movado" & !is.na(Price)), 
+                             ifelse(Retailer == "Amazon", sum(Retailer == "Amazon" & !is.na(Price)), 
+                                    sum(Retailer == "Macy's" & !is.na(Price))))) %>% 
+      googleVis::gvisBubbleChart(xvar = "Price", yvar = "Count", colorvar = "Retailer", #sizevar = "Count", 
+                                 options=list(width="auto", height="330px", hAxis = "{title: 'Price', format: 'currency'}",
+                                              vAxis = "{title: 'Frequency Count'}", vAxis='{minValue:0}',# maxValue:30}', 
+                                              legend = "{position: 'top'}", bubble = "{opacity: .4}"))
+  )
+  
+  output$prod_num_graph <- googleVis::renderGvis(
+    prices_df %>% filter(model_number == input$select_prod_num) %>% 
+      summarise(Movado = mean(price_movado, na.rm = TRUE), "Macy's" = mean(price_macys, na.rm = TRUE), 
+                "Amazon" = mean(price_amazon, na.rm = TRUE), "Nordstrom" = mean(price_nordstrom, na.rm = TRUE)) %>% 
+      pivot_longer(cols = c("Movado", "Amazon", "Macy's", "Nordstrom")) %>% 
+      googleVis::gvisColumnChart(xvar = "name", yvar = "value", 
+                                 options=list(width="auto", height="350px", bar = "{groupWidth: '95%'}", 
+                                              legend = "{position: 'none'}", #colors = "['#55c821']", 
+                                              vAxis = "{format: 'currency', title: 'Price'}",
+                                              hAxis = "{title: 'Retailer'}"))
+  )
+  
+  output$selected_prod_num <- renderValueBox(
+    infoBox(title = movado_df[movado_df["model_number"] == input$select_prod_num, "watch_model"], 
+            value = paste(movado_df[movado_df["model_number"] == input$select_prod_num, c("case_diameter", "dial")], collapse = "mm "),
+            color = "black", icon = icon("clock"), 
+            href = movado_df[movado_df["model_number"] == input$select_prod_num, "url"])
+  )
+  
   
   # INSIGHT
   output$overview_price <- renderPlot({
@@ -327,51 +372,13 @@ function(input, output, session){
       ggtitle("Proportion of Products with Reviews, per Retailer")
   )
   
-  output$price_graph <- googleVis::renderGvis(
-    prices_df %>% filter(watch_model == input$select_model) %>% 
-      summarise(Movado = mean(price_movado, na.rm = TRUE), "Macy's" = mean(price_macys, na.rm = TRUE), 
-                "Amazon" = mean(price_amazon, na.rm = TRUE), "Nordstrom" = mean(price_nordstrom, na.rm = TRUE)) %>% 
-      pivot_longer(cols = c("Movado", "Amazon", "Macy's", "Nordstrom")) %>% 
-      googleVis::gvisColumnChart(xvar = "name", yvar = "value", 
-                                 options=list(width="auto", height="330px", bar = "{groupWidth: '95%'}", 
-                                              legend = "{position: 'none'}", colors = "['#55c821']", 
-                                              vAxis = "{format: 'currency', title: 'Price'}",
-                                              hAxis = "{title: 'Retailer'}"))
+  output$incorrect_nordstrom <- DT::renderDataTable(
+    nordstrom_df %>% filter(bullet_d_case_d != case_diameter) %>% 
+      select(watch_model, url, "Model Number" = model_number, "Title's Case Diameter" = case_diameter, 
+             "Description's Case Diameter" = bullet_d_case_d, "Description" = bullet_details) %>% 
+      mutate(watch_model = paste0("<a href='", url, "'>", watch_model, "</a>")) %>% select(-url, "Watch Model" = watch_model) %>% 
+      datatable(escape = 1)
   )
-  
-  output$price_bubble <- googleVis::renderGvis(
-    prices_df %>% filter(watch_model == input$select_model) %>% 
-      select(Model = watch_model, Movado = price_movado, "Macy's" = price_macys, "Amazon" = price_amazon, "Nordstrom" = price_nordstrom) %>% 
-      pivot_longer(names_to = "Retailer", values_to = "Price", cols = c("Movado", "Amazon", "Macy's", "Nordstrom")) %>% 
-      mutate(Count = if_else(Retailer == "Movado", sum(Retailer == "Movado" & !is.na(Price)), 
-                             ifelse(Retailer == "Amazon", sum(Retailer == "Amazon" & !is.na(Price)), 
-                                    sum(Retailer == "Macy's" & !is.na(Price))))) %>% 
-      googleVis::gvisBubbleChart(xvar = "Price", yvar = "Count", colorvar = "Retailer", #sizevar = "Count", 
-                                 options=list(width="auto", height="330px", hAxis = "{title: 'Price', format: 'currency'}",
-                                              vAxis = "{title: 'Frequency Count'}", vAxis='{minValue:0}',# maxValue:30}', 
-                                              legend = "{position: 'top'}", bubble = "{opacity: .4}"))
-  )
-  
-  output$prod_num_graph <- googleVis::renderGvis(
-    prices_df %>% filter(model_number == input$select_prod_num) %>% 
-      summarise(Movado = mean(price_movado, na.rm = TRUE), "Macy's" = mean(price_macys, na.rm = TRUE), 
-                "Amazon" = mean(price_amazon, na.rm = TRUE), "Nordstrom" = mean(price_nordstrom, na.rm = TRUE)) %>% 
-      pivot_longer(cols = c("Movado", "Amazon", "Macy's", "Nordstrom")) %>% 
-      googleVis::gvisColumnChart(xvar = "name", yvar = "value", 
-                                 options=list(width="auto", height="350px", bar = "{groupWidth: '95%'}", 
-                                              legend = "{position: 'none'}", #colors = "['#55c821']", 
-                                              vAxis = "{format: 'currency', title: 'Price'}",
-                                              hAxis = "{title: 'Retailer'}"))
-  )
-  
-  output$selected_prod_num <- renderValueBox(
-    infoBox(title = movado_df[movado_df["model_number"] == input$select_prod_num, "watch_model"], 
-            value = paste(movado_df[movado_df["model_number"] == input$select_prod_num, c("case_diameter", "dial")], collapse = "mm "),
-            color = "black", icon = icon("clock"), 
-            href = movado_df[movado_df["model_number"] == input$select_prod_num, "url"])
-  )
-  
-  
   
   
 }
