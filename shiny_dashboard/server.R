@@ -374,11 +374,47 @@ function(input, output, session){
   
   output$incorrect_nordstrom <- DT::renderDataTable(
     nordstrom_df %>% filter(bullet_d_case_d != case_diameter) %>% 
-      select(watch_model, url, "Model Number" = model_number, "Title's Case Diameter" = case_diameter, 
-             "Description's Case Diameter" = bullet_d_case_d, "Description" = bullet_details) %>% 
-      mutate(watch_model = paste0("<a href='", url, "'>", watch_model, "</a>")) %>% select(-url, "Watch Model" = watch_model) %>% 
-      datatable(escape = 1)
+      left_join(select(movado_df, movado_url = url, model_number), by = "model_number") %>% 
+      select(watch_model, url, "Color" = color, model_number, "Title's Case Diameter" = case_diameter, 
+             "Description's Case Diameter" = bullet_d_case_d, "Description" = bullet_details, movado_url) %>% 
+      mutate(watch_model = paste0("<a href='", url, "'>", watch_model, "</a>")) %>% 
+      mutate(model_number = paste0("<a href='", movado_url, "'>", model_number, "</a>")) %>%
+      select(-url, -movado_url, "Nordstrom Watch Title" = watch_model, "Model Number" = model_number) %>% 
+      datatable(escape = 1,  options = list(columnDefs = list(list(
+        targets = 6,
+        render = JS(
+          "function(data, type, row, meta) {",
+          "return type === 'display' && data.length > 35 ?",
+          "'<span title=\"' + data + '\">' + data.substr(0, 35) + '...</span>' : data;",
+          "}")
+      ))
+      ))
   )
   
+  output$vague_nordstrom <- DT::renderDataTable(
+    nordstrom_df %>% left_join(select(movado_df, movado_model = watch_model, model_number, movado_url = url), by = "model_number") %>% 
+      mutate(watch_model = paste0("<a href='", url, "'>", watch_model, "</a>")) %>% 
+      mutate(model_number = paste0("<a href='", movado_url, "'>", model_number, "</a>")) %>%
+      select("Nordstrom's Watch Title" = watch_model, "Color" = color, "Inferred Collection" = collection, "Actual Model Name" = movado_model, "Model Number" = model_number, "Nordstrom's Price" = price) %>% 
+      datatable(escape = 1) %>% 
+      formatStyle("Inferred Collection", backgroundColor = styleEqual("Unknown", '#dd9787')) %>% 
+      formatCurrency(columns = "Nordstrom's Price", currency ="$")
+  )
+  
+  output$vague_description_nordstrom <- DT::renderDataTable(
+    nordstrom_df %>% left_join(select(movado_df, movado_model = watch_model, model_number, movado_url = url), by = "model_number") %>% 
+      mutate(watch_model = paste0("<a href='", url, "'>", watch_model, "</a>")) %>% 
+      mutate(model_number = paste0("<a href='", movado_url, "'>", model_number, "</a>")) %>%
+      select("Nordstrom's Watch Title" = watch_model, "Color" = color, "Patterns in Description" = dial, "Movado's Model Name" = movado_model, "Model Number" = model_number, "Nordstrom's Description" = description) %>% 
+      datatable(escape = 1, options = list(columnDefs = list(list(
+        targets = 6,
+        render = JS(
+          "function(data, type, row, meta) {",
+          "return type === 'display' && data.length > 35 ?",
+          "'<span title=\"' + data + '\">' + data.substr(0, 35) + '...</span>' : data;",
+          "}")
+      ))))# %>% 
+      # formatStyle("Inferred Collection", backgroundColor = styleEqual("Unknown", '#dd9787')) %>% 
+  )
   
 }

@@ -55,12 +55,18 @@ collect_crystal <- function(x){
 
 collect_dial <- function(x){
   v <- c()
-  m <- regexpr("mother.*pearl", x, ignore.case = TRUE)
-  n <- regexpr("diamonds", x, ignore.case = TRUE)
+  m <- regexpr("sophisticated", x, ignore.case = TRUE)
+  n <- regexpr("sunray dial", x, ignore.case = TRUE)
   o <- regexpr("museum.*dot", x, ignore.case = TRUE)
-  if (m[1] != -1){v <- regmatches(x, m)}
-  if (n[1] != -1){v <- paste(v, regmatches(x, n))}
-  if (o[1] != -1){v <- paste(v, "Museum with concave dot")}
+  p <- regexpr("everyday style", x, ignore.case = TRUE)
+  q <- regexpr("cocktail.*style", x, ignore.case = TRUE)
+  r <- regexpr(" elegan.*", x, ignore.case = TRUE)
+  if (m[1] != -1){v <- "'sophisticated'"}
+  if (n[1] != -1){v <- paste(v, "'sunray dial'")}
+  if (o[1] != -1){v <- paste(v, "'Museum dot'")}
+  if (p[1] != -1){v <- paste(v, "'everyday style'")}
+  if (q[1] != -1){v <- paste(v, "'cocktail-style'")}
+  if (r[1] != -1){v <- paste(v, "'elegant'")}
   if (is_null(v)){v <- ""}
   v
 }
@@ -91,16 +97,18 @@ collect_collection <- function(x){
 
 collect_collection_nordstrom <- function(x){
   x = str_to_lower(x)
-  m <- regexpr("heritage", x, perl=FALSE, fixed=FALSE)
-  n <- regexpr("amorosa", x, perl=FALSE, fixed=FALSE)
-  o <- regexpr("bold ceramic", x, perl=FALSE, fixed=FALSE)
-  p <- regexpr("connect", x, perl=FALSE, fixed=FALSE)
-  q <- regexpr("bold evolution", x, perl=FALSE, fixed=FALSE)
-  r <- regexpr("bold fusion", x, perl=FALSE, fixed=FALSE)
-  s <- regexpr("esperanza", x, perl=FALSE, fixed=FALSE)
-  t <- regexpr("museum sport", x, perl=FALSE, fixed=FALSE)
-  w <- regexpr("museum classic", x, perl=FALSE, fixed=FALSE)
-  z <- regexpr("sapphire", x, perl=FALSE, fixed=FALSE)
+  m <- regexpr("heritage", x)
+  n <- regexpr("amorosa", x)
+  o <- regexpr("bold .*ceramic", x)
+  p <- regexpr("connect", x)
+  q <- regexpr("bold evolution", x)
+  r <- regexpr("bold fusion", x)
+  s <- regexpr("esperanza", x)
+  t <- regexpr("museum sport", x)
+  v <- regexpr("bold .* bangle", x)
+  w <- regexpr("museum classic", x)
+  y <- regexpr("series 800", x)
+  z <- regexpr("sapphire", x)
   if (m[1] != -1){ return("Movado Heritage Series")
   } else if (n[1] != -1){ return("Amorosa")
   } else if (o[1] != -1){ return("Movado BOLD Ceramic")
@@ -109,7 +117,9 @@ collect_collection_nordstrom <- function(x){
   } else if (r[1] != -1){ return("Movado BOLD Fusion")
   } else if (s[1] != -1){ return("Esperanza")
   } else if (t[1] != -1){ return("Museum Sport")
+  } else if (v[1] != -1){ return("Movado BOLD Bangle")
   } else if (w[1] != -1){ return("Museum Classic")
+  } else if (y[1] != -1){ return("Series 800")
   } else if (z[1] != -1){ return("Sapphire")
   } else {return("Unknown")}
 }
@@ -228,15 +238,31 @@ nordstrom_df <- nordstrom_df %>% mutate(real_m_num = ifelse(model_number == "540
            ifelse(model_number == "5678560" & color == "Black/ Silver", "3600624", ifelse(model_number == "5678616" & color == "Black/ Blue/ Silver", "607270",
            ifelse(model_number == "5678616" & color == "Black/ Gold", "607271", ifelse(model_number == "5678616" & color == "Black/ Silver", "607269",
            ifelse(model_number == "5678881", "607203", ifelse(model_number == "5678851", "3600492", ifelse(model_number == "5678896", "0607491",
-           ifelse(model_number == "5678898", "3600698", ifelse(model_number == "5679005", "3650088", ifelse(model_number == "5679011", "3600708",
+           ifelse(model_number == "5678898", "3600698", ifelse(model_number == "5679011", "3600708",
            ifelse(model_number == "5679026", "607202", ifelse(model_number == "5679033" & color == "Khaki/ Carnation Gold", "3600643",
-           ifelse(model_number == "5679033" & color == "Khaki/ Gold", "3600642", ifelse(model_number == "5679085" & color == "Silver/ Rose Gold", "3600504", real_m_num))))))))))))))))))))))))))))))))))))))))))))))))))
+           ifelse(model_number == "5679033" & color == "Khaki/ Gold", "3600642", ifelse(model_number == "5679085" & color == "Silver/ Rose Gold", "3600504", 
+                      real_m_num)))))))))))))))))))))))))))))))))))))))))))))))))
 
 # cont.
 nordstrom_df <- nordstrom_df %>% 
-  mutate(model_number = ifelse(model_number == "5679085" & color == "Silver", "3600501", ifelse(model_number == "5679046", "3600658",
+  mutate(model_number = ifelse(model_number == "5679085" & color == "Silver", "3600579", ifelse(model_number == "5679046", "3600658",
            ifelse(model_number == "5683302", "3660028", ifelse(model_number == "5683304", "3660030", ifelse(model_number == "5683305", "3660036",
-           ifelse(model_number == "5679407", "3650097", ifelse(model_number == "5679406", "3600586", real_m_num)))))))) %>% select(-real_m_num)
+           ifelse(model_number == "5679407", "3650097", ifelse(model_number == "5679406", "3600586", 
+           ifelse(model_number == "5686203" & color == "Black/ Gold", "607271", ifelse(model_number == "5686203" & color == "Black/ Silver", "607269", 
+           ifelse(model_number == "5686203" & color == "Black/ Blue/ Silver", "607270", 
+           ifelse(model_number == "5686219", "607491", ifelse(model_number == "3833074", "3600258",
+           ifelse(model_number == "3502549", "2600142", ifelse(model_number == "4117677", "3600279",
+           ifelse(model_number == "5247095", "3600590", ifelse(model_number == "3907993", "3600306",
+           ifelse(model_number == "5686205" & color == "Silver/ Rose Gold", "3600504", ifelse(model_number == "5686205" & color == "Silver", "3600501",
+           ifelse(model_number == "5686127", "3600086", ifelse(model_number == "5686179", "3600534",
+           ifelse(model_number == "5686181", "3600658", ifelse(model_number == "5686250", "3600712",
+           ifelse(model_number == "5247098", "3600586", ifelse(model_number == "5686214", "3650088",
+           ifelse(model_number == "5686157" & color == "Black/ Silver", "3600624", ifelse(model_number == "5686157" & color == "Black/ Gold", "3600623",
+           ifelse(model_number == "5686157" & color == "Black", "3600621", ifelse(model_number == "4497771", "3650011",
+           ifelse(model_number == "5402104", "3660030", ifelse(model_number == "5678851", "3600492",
+           ifelse(model_number == "5686223", "607307", ifelse(model_number == "4944900" & color == "Cognac/ Grey", "3600521",
+           ifelse(model_number == "5577744" & color == "Navy/ Rose Gold", "3600708",
+              real_m_num)))))))))))))))))))))))))))))))))) %>% select(-real_m_num)
 
 # ESTABLISH DF OF MOVADO PRODUCTS WITH COMPETITOR PRICING
 prices_df <- left_join(select(movado_df, "model_number", "watch_model", "price", "in_stock"), 
@@ -257,8 +283,8 @@ full_prices_df$difference <- if_else(is.na(full_prices_df$price_movado), 0,
                                             full_prices_df$price_movado - pmin(full_prices_df$price_macys, full_prices_df$price_amazon, 
                                                                                full_prices_df$price_nordstrom, na.rm = TRUE)))
 # EXTRACT 1, 2, 3 TOP DIFFERENCES IN PRICE
-max_diff <- prices_df[prices_df["difference"] == max(prices_df$difference, na.rm = TRUE), ]
-sec_diff <- prices_df[prices_df["difference"] == sort(prices_df$difference, decreasing=TRUE)[2], ]
+max_diff <- prices_df[prices_df["difference"] == max(prices_df$difference, na.rm = TRUE), ][1, ]
+sec_diff <- prices_df[prices_df["difference"] == sort(prices_df$difference, decreasing=TRUE)[2], ][2, ]
 thrd_diff <- prices_df[prices_df["difference"] == sort(prices_df$difference, decreasing=TRUE)[3], ]
 
 # FIND WORD COUNTS OF REVIEWS
