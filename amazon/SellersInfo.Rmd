@@ -477,6 +477,7 @@ amazon_dfr <- amazon_df %>% select(., model_number, price, seller)
 
 all_df <- rbind(nordstrom_dfr, macys_dfr, movado_dfr, amazon_dfr)
 all_df <- all_df %>% group_by(model_number) %>% mutate(., count = n())
+all_df <- all_df %>% distinct(., model_number, seller)
 all_df
 
 all_df %>% filter(., model_number == "3600501")
