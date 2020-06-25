@@ -57,8 +57,7 @@ shinyUI(
                                                        subtitle = paste(max(macys_df["review_count"]), "total reviews"),
                                                        href = macys_df[max(macys_df["review_count"]), "url"]),
                                     box(width = 12, p("The number of products without reviews received is identical to the number of products without ratings,
-                                                      possibly implying that Macy's does not allow customers to rate a product without leaving a review. A
-                                                      word count of reviews written show that most do not exceed {FIND AVERAGE WORD COUNT OF MACY'S REVIEW}.",
+                                                      possibly implying that Macy's does not allow customers to rate a product without leaving a review.",
                                                       br(), br(), "We can also see in the graph below on the right that", tags$b(" of the products receiving reviews, nearly half
                                                       of those only receive one review.")) )
                                     ),
@@ -307,7 +306,7 @@ shinyUI(
                                        review at both Macy's or Nordstrom, that the two shopping populations are rather similar.", br(), br(),
                                        h4("Average Word Count"), "When including all Movado products sold on respective retailer websites,
                                        both those with and without reviews, ", tags$b("Nordstrom holds the edge just slightly above Macy's with
-                                                                                      about four more words on average per review written.")
+                                                                                      about three more words on average per review written.")
                                        ))
                     ),
                     h3("Frequent Review Words"),
@@ -320,7 +319,7 @@ shinyUI(
                     h2("Product Descriptions"),
                     fluidRow(
                       box(width = 4, h4("Incorrect Case Diameter"), p("While working with the data, we noticed that Nordstrom had some conflicting 
-                                                                      measurements when it cam to case diameter. The title would list one size, 
+                                                                      measurements when it came to case diameter. The title would list one size, 
                                                                       while the product description listed a different size. On the first tab,  
                                                                       the specific products with conflicting measurements are listed."),br(), 
                           h4("Vague Product Names"), p("In addition to having incorrect information, Nordstrom's listings for Movado products 
@@ -334,7 +333,7 @@ shinyUI(
                                                       to aid in identifying which product is being listed. For example, ", tags$b("none of the watches from the 'Movado BOLD Thin' 
                                                       collection are described as being a ", tags$i("thin"), "watch"), " on Nordstrom, nor is there any distinction made 
                                                       between watches with a mesh bracelet versus a pyramid mesh. And almost all watches are described as having a 'Museum dot', 
-                                                      leading some of our early classification efforts astray when rarely where the products actually a part of one of the 
+                                                      leading some of our early classification efforts astray when rarely were the products actually a part of one of the 
                                                       Museum collections.")),
                       tabBox(width = 8, tabPanel("Incorrect Measurements", DT::dataTableOutput("incorrect_nordstrom")),
                              tabPanel("Vague Product Names", DT::dataTableOutput("vague_nordstrom")),
