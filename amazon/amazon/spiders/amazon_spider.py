@@ -70,6 +70,7 @@ class AmazonSpider(Spider):
         #number of questions
         q_count = response.xpath('//a[@id="askATFLink"]/span/text()').get()
 
+        url = response.request.url
         print("------------------")
         print(product)
         print(code)
@@ -80,7 +81,7 @@ class AmazonSpider(Spider):
 
         price_seller = 'https://www.amazon.com/gp/offer-listing/{}/ref=dp_olp_new_center?ie=UTF8&condition=new'.format(asin)
 
-        yield Request(url=price_seller, callback=self.parse_seller_page, meta=dict(code = code, star = star, rev_count = rev_count, q_count = q_count))
+        yield Request(url=price_seller, callback=self.parse_seller_page, meta=dict(code = code, star = star, rev_count = rev_count, q_count = q_count, url = url))
 
         # Number of answered question for each product
     #     q_and_a_url = 'https://www.amazon.com/ask/questions/asin/{x}/1/ref=ask_ql_psf_ql_hza'.format(asin)
@@ -127,6 +128,7 @@ class AmazonSpider(Spider):
         star = response.meta['star']
         rev_count = response.meta['rev_count']
         q_count = response.meta['q_count']
+        url = response.meta['url']
         price = list(map(str.strip, price))
         print(product)
         print(code)
@@ -142,6 +144,7 @@ class AmazonSpider(Spider):
             item['q_count'] = q_count
             item['price'] = price[i]
             item['seller'] = seller[i]
+            item['url'] = url
             yield item
 
 

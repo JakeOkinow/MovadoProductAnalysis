@@ -169,6 +169,25 @@ amazon_p_df <- amazon_p_df[order(-amazon_p_df$count),]
 p_list <- setNames(amazon_p_df$product, amazon_p_df$name)
 
 
+#all prices#
+
+nordstrom_dfr <- nordstrom_df %>% mutate(., seller = "Nordstrom") %>% select(., model_number, watch_model, price, seller)
+macys_dfr <- macys_df %>% mutate(., seller = "Macys") %>% select(., model_number, watch_model, price, seller)
+movado_dfr <- movado_df %>% mutate(., seller = "Movado") %>% select(., model_number, watch_model, price, seller)
+amazon_dfr <- amazon_df %>% rename(., watch_model = product)
+amazon_dfr <- amazon_dfr %>% select(., model_number, watch_model, price, seller)
+
+all_df <- rbind(nordstrom_dfr, macys_dfr, movado_dfr, amazon_dfr)
+all_df <- all_df %>% group_by(model_number) %>% mutate(., count = n())
+all_s_df <- all_df %>% distinct(., model_number, .keep_all = TRUE)
+all_s_df <- all_s_df %>% mutate(., name =paste(as.character(model_number), count, sep=" : " ))
+all_s_df <- all_s_df[order(-all_s_df$count),]
+a_list <- setNames(all_s_df$model_number, all_s_df$name)
+
+
+#all prices#
+
+
 
 macys_df$group <-cut(macys_df$price, seq(100, 3000, by=100), labels = FALSE)
 
@@ -234,6 +253,9 @@ nordstrom_df <- nordstrom_df %>%
            ifelse(model_number == "5679407", "3650097", ifelse(model_number == "5679406", "3600586", real_m_num)))))))) %>% select(-real_m_num)
 
 # ESTABLISH DF OF MOVADO PRODUCTS WITH COMPETITOR PRICING
+
+
+
 prices_df <- left_join(select(movado_df, "model_number", "watch_model", "price"), 
                        select(macys_df, "model_number", "price"), by= "model_number", suffix = c("_movado", "_macys")) %>% 
   left_join(select(amazon_df, "model_number", "price_amazon" = "price"),  by = "model_number") %>%

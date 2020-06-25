@@ -18,3 +18,4 @@ class AmazonItem(scrapy.Item):
     code = scrapy.Field()
     price = scrapy.Field()
     seller = scrapy.Field()
+    url = scrapy.Field()

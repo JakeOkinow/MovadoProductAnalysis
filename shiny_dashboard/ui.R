@@ -238,13 +238,12 @@ shinyUI(
                       box(width = 4, p("Text about word count of products"))
                     ),
                     
-                    selectInput("select_model", label = "Select Model:", choices = sort(unique(prices_df$watch_model))),
-                    fluidRow(box(width = 6, height=400, title = "Mean Prices Per Retailer", htmlOutput("price_graph")),
-                             box(width = 6, height=400, title = "Price Against Frequency from a Seller", htmlOutput("price_bubble"))
-                    ),
-                    selectizeInput("select_prod_num", label = "Select Product Number:", choices = sort(unique(prices_df$model_number))),
-                    fluidRow(box(width = 6, title = "Retailers' Price by Product Number", htmlOutput("prod_num_graph")),
-                             infoBoxOutput("selected_prod_num"))
+                    # selectInput("select_model", label = "Select Model:", choices = sort(unique(prices_df$watch_model))),
+                    # fluidRow(box(width = 6, height=400, title = "Mean Prices Per Retailer", plotOutput("price_graph")),
+                    # ),
+                    selectizeInput("select_prod_num", "Select Product Number:", a_list),
+                    fluidRow(box(title = "Retailers' Price by Product Number", plotOutput("prod_num_graph")),
+                             dataTableOutput("selected_prod_num"))
                   )
           )
         )
