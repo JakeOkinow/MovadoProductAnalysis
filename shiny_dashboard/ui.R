@@ -127,10 +127,9 @@ shinyUI(
                              )
                     ),
                     h2("Reviews: Presence and Distribution"), br(),
-                    fluidRow(box(width = 4, p("text text text text text text text")),
-                             column(width = 8, infoBox(width = 12, fill = TRUE, title = "Most Reviewed Product", value = amazon_df$product[which.max(amazon_df$rev_count)],
-                                                       subtitle = paste(max(amazon_d_df$rev_count), "total reviews"))
-                             )
+                    fluidRow(infoBox(width = 8, fill = TRUE, title = "Most Reviewed Product", value = amazon_df$product[which.max(amazon_df$rev_count)],
+                                                       subtitle = paste(max(amazon_d_df$rev_count), "total reviews")
+                                     )
                     ),
                     fluidRow(box(align = "center", width = 5, shiny::htmlOutput("amazon_zero_reviews_pie")),
                              box(width = 7, plotOutput("amazon_review_count_sans_0"))),
@@ -172,8 +171,11 @@ shinyUI(
                     h2("Pricing"), br(),
                     fluidRow(box(width = 5, "Amazon tends to have lower priced products, while Macy's and Movado both have most
                                  frequently products priced at $695. However, Macy's average product cost is higher
-                                 than Movado's. Further investigation will determine if this is because of a tendency
-                                 to carry more of the higher priced watches of Movado's."),
+                                 than Movado's. This could be that Macy's stocks more of the higher-priced items of Movado's. Macy's has also 
+                                 waivered up and down greatly with each new scrape, as Macy's drops prices pretty drastically with semi-frequent sales.", br(), br(), 
+                                 "The price density chart on the second tab confirms that Macy's is very close in Movado's footstep with stocking more in the 
+                                 $750 - $1,750 range.", br(), br(), "The histogram on the third tab further demonstrates the different distributions of inventory, 
+                                 particularly with Amazon's lower range inventory."),
                              tabBox(width = 7, tabPanel("Mean/Median Price", plotOutput("overview_price")),
                                     tabPanel("Price Densities", plotOutput("price_density")),
                                     tabPanel("Price Histogram", align = "center", checkboxGroupInput("select_retailer", "Select Retailer:",
@@ -220,15 +222,40 @@ shinyUI(
                       column(width = 8, box(width = 12, DT::dataTableOutput("differences_table"))),
                       fluidRow(
                         box(solidHeader = TRUE, width = 12, title = "A Note About Availability", collapsible = TRUE, collapsed = FALSE, background = "navy",
-                            box(background= "navy", p("There is a total of ",
-                              as.character(length(unique(full_prices_df[(full_prices_df$in_stock != "In Stock" | is.na(full_prices_df$in_stock)) & !(is.na(full_prices_df["price_macys"]) &
-                                                                                                                                                       is.na(full_prices_df["price_nordstrom"]) & is.na(full_prices_df["price_amazon"])), "model_number"]))),
-                              "products that can only be purchased on another retailer's site due to being out of stock or unlisted on Movado.com.", br(), br(), "In addition, there are ",
-                              as.character(length(unique(full_prices_df[full_prices_df$in_stock == "In Stock" & is.na(full_prices_df["price_macys"]) &
-                                                                          is.na(full_prices_df["price_nordstrom"]) & is.na(full_prices_df["price_amazon"]), "model_number"]))),
-                              "products that can ", tags$i(" ONLY "), "be found at Movado.com. ", br())),
+                            box(background= "navy", 
+                                fluidRow(valueBox(value = length(unique(full_prices_df[full_prices_df$in_stock == "In Stock" & 
+                                                                                is.na(full_prices_df["price_macys"]) & 
+                                                                                is.na(full_prices_df["price_nordstrom"]) & 
+                                                                                is.na(full_prices_df["price_amazon"]), "model_number"])), 
+                                         subtitle = "Only from Movado.com")), br(), br(), 
+                                fluidRow(valueBox(color = "yellow", value = length(unique(full_prices_df[(full_prices_df$in_stock != "In Stock" | 
+                                                                                 is.na(full_prices_df$in_stock)) & 
+                                                                                is.na(full_prices_df["price_macys"]) & 
+                                                                                is.na(full_prices_df["price_amazon"]), "model_number"])),
+                                         subtitle = "Only from Nordstrom.com"),
+                                valueBox(color = "yellow", value = length(unique(full_prices_df[(full_prices_df$in_stock != "In Stock" | 
+                                                                                 is.na(full_prices_df$in_stock)) & 
+                                                                                is.na(full_prices_df["price_nordstrom"]) & 
+                                                                                is.na(full_prices_df["price_amazon"]), "model_number"])),
+                                         subtitle = "Only from Macys.com"), 
+                                valueBox(color = "yellow", value = length(unique(full_prices_df[(full_prices_df$in_stock != "In Stock" | 
+                                                                                 is.na(full_prices_df$in_stock)) & 
+                                                                                is.na(full_prices_df["price_macys"]) & 
+                                                                                is.na(full_prices_df["price_nordstrom"]), "model_number"])),
+                                         subtitle = "Only from Amazon.com")), br(), br(), 
+                                fluidRow(valueBox(value = length(unique(full_prices_df[full_prices_df$in_stock == "In Stock" & 
+                                                                                -(is.na(full_prices_df["price_macys"]) & 
+                                                                                    is.na(full_prices_df["price_nordstrom"]) &
+                                                                                    is.na(full_prices_df["price_amazon"])), "model_number"])),
+                                         subtitle = "Movado and At Least 1 Retailer"), 
+                                valueBox(color = "red", value = length(unique(full_prices_df[(full_prices_df$in_stock != "In Stock" | 
+                                                                                 is.na(full_prices_df$in_stock)) & 
+                                                                                !(is.na(full_prices_df["price_macys"]) & 
+                                                                                    is.na(full_prices_df["price_nordstrom"]) &
+                                                                                    is.na(full_prices_df["price_amazon"])), "model_number"])),
+                                         subtitle = "Only from Retailers")), 
+                                ),
                             box(sankeyNetworkOutput("sankey_avail"))),
-
                       )
                     ),
                     h3("Discounts by Retailer"),
@@ -238,26 +265,31 @@ shinyUI(
                                               as.character(length(unique(full_prices_df[full_prices_df$difference == 0 & full_prices_df$in_stock == "In Stock" & !(is.na(full_prices_df["price_macys"])
                                                                                                         & is.na(full_prices_df["price_nordstrom"]) &
                                                                                                           is.na(full_prices_df["price_amazon"])), "model_number"]))),
-                                              " products that Movado.com sells that can only be found at full price on retailers' sites."),
+                                              " products that Movado.com sells that can be found only at full price on retailers' sites."),
                                               "For the products whose prices do not match Movado.com, their average savings are
-                                              captured in the value boxes to the right. ", br(), br(), h4("Amazon's Lower Discount"),
-                                              "On Amazon, the average discount one can find is",
-                                              paste0("$", round(mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price_amazon"], na.rm = TRUE), 2), "."),
-                                              "While Amazon can often be a bargain site, surprisingly Amazon's average discount is lower than the other two retailers.
-                                              This may be that Macy's and Nordstrom post large sales of 20% - 30% off merchandise and can
-                                              handle lowering their profit in turn for moving items off shelves
-                                              more than maybe Amazon's vendors can weather. More notably, though, as seen in the above graph
+                                              captured in the value boxes to the right. ", br(), br(), h4("Amazon's Discount"),
+                                              "While Amazon can often be a bargain site, surprisingly Amazon's average discount has been lower than the other two retailers. 
+                                              That is not the case after this most recent scrape, however, as Macy's ended a large blowout sale and moved  most products back 
+                                              to full retail price. Amazon's lower discounts may be due to the fact that Macy's and Nordstrom post large sales of 20% - 30% off 
+                                              merchandise and can handle lowering their profit in turn for moving items off shelves
+                                              more than maybe Amazon's vendors can weather. More important, though, as seen in the above graph
                                               illustrating densities of prices (Tab #2, 'Price Densities'), ", tags$b(" Amazon
                                               lists more lower priced items, which limit the size of the discount.")))),
                       column(width = 6,
                              valueBox(color = "yellow", width = 8, subtitle = "Average Macy's Discount", icon = icon('tags'),
-                               value = paste0("$", round(mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price_macys"], na.rm = TRUE), 2))
+                               value = paste0("$", round(mean(prices_df[!is.na(prices_df$price_macys), "price_movado"] - prices_df[!is.na(prices_df$price_macys), "price_macys"]), 2),
+                                              " (", round(sum(prices_df[!is.na(prices_df$price_macys), "price_movado"] - prices_df[!is.na(prices_df$price_macys), "price_macys"]) 
+                                                          * 100/sum(prices_df[!is.na(prices_df$price_macys), "price_movado"]), 2), "%)")
                                     ),
                             valueBox(color = "yellow", width = 8, subtitle = "Average Amazon Discount", icon = icon('tags'),
-                               value = paste0("$", round(mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price_amazon"], na.rm = TRUE), 2))
+                               value = paste0("$", round(mean(prices_df[!is.na(prices_df$price_amazon), "price_movado"] - prices_df[!is.na(prices_df$price_amazon), "price_amazon"]), 2),
+                                              " (", round(sum(prices_df[!is.na(prices_df$price_amazon), "price_movado"] - prices_df[!is.na(prices_df$price_amazon), "price_amazon"])
+                                                          * 100/sum(prices_df[!is.na(prices_df$price_amazon), "price_movado"]), 2), "%)")
                                     ),
                             valueBox(color = "yellow", width = 8, subtitle = "Average Nordstrom Discount", icon = icon('tags'),
-                               value = paste0("$", round(mean(prices_df[prices_df$difference !=0, "price_movado"] - prices_df[prices_df$difference !=0, "price_nordstrom"], na.rm = TRUE), 2))
+                               value = paste0("$", round(mean(prices_df[!is.na(prices_df$price_nordstrom), "price_movado"] - prices_df[!is.na(prices_df$price_nordstrom), "price_nordstrom"]), 2), 
+                                              " (", round(sum(prices_df[!is.na(prices_df$price_nordstrom), "price_movado"] - prices_df[!is.na(prices_df$price_nordstrom), "price_nordstrom"])
+                                                          * 100/sum(prices_df[!is.na(prices_df$price_nordstrom), "price_movado"]), 2), "%)")
                                     )
                       )
                     ),
@@ -281,14 +313,29 @@ shinyUI(
                     h3("Frequent Review Words"),
                     fluidRow(
                       column(width = 6, align = "center", box(background = "navy", width = 12, imageOutput("review_word_cloud"))),
-                      # box(background = "navy", width = 6, plotOutput("review_word_cloud")),
                       box(width = 4, "The word cloud to the left breaks down the popular words found in reviews. 
                       Some of the more frequent words are 'beautiful' and 'love'. This is somewhat expected as we saw most of the ratings for all three 
                           retailers are very positive.")
                     ),
                     h2("Product Descriptions"),
                     fluidRow(
-                      box(width = 4, ""),
+                      box(width = 4, h4("Incorrect Case Diameter"), p("While working with the data, we noticed that Nordstrom had some conflicting 
+                                                                      measurements when it cam to case diameter. The title would list one size, 
+                                                                      while the product description listed a different size. On the first tab,  
+                                                                      the specific products with conflicting measurements are listed."),br(), 
+                          h4("Vague Product Names"), p("In addition to having incorrect information, Nordstrom's listings for Movado products 
+                                                       are often extremely vague in the item's title. We were able to extract the collection each product 
+                                                       is a part of for some listings, yet for many others it was impossible. 'Movado Connect 2.0' 
+                                                       watches are titled as 'Connect Chronograph' watches or 'Connect 2.0 Glitz Mesh Band'. And titles like 'Bold Bracelet 
+                                                       Watch, 34mm' could describe a watch in almost any of the multiple 'Movado BOLD' collections. ", 
+                                                       tags$b("Almost half of all watches listed by Nordstrom have too vague a name to identify of which collection 
+                                                              the product is a part.")), br(),
+                          h4("Vague Descriptions"), p("Lastly, worse than listing products under vague titles,  Nordstrom does not provide adequate descriptions 
+                                                      to aid in identifying which product is being listed. For example, ", tags$b("none of the watches from the 'Movado BOLD Thin' 
+                                                      collection are described as being a ", tags$i("thin"), "watch"), " on Nordstrom, nor is there any distinction made 
+                                                      between watches with a mesh bracelet versus a pyramid mesh. And almost all watches are described as having a 'Museum dot', 
+                                                      leading some of our early classification efforts astray when rarely where the products actually a part of one of the 
+                                                      Museum collections.")),
                       tabBox(width = 8, tabPanel("Incorrect Measurements", DT::dataTableOutput("incorrect_nordstrom")),
                              tabPanel("Vague Product Names", DT::dataTableOutput("vague_nordstrom")),
                              tabPanel("Vague Descriptions", DT::dataTableOutput("vague_description_nordstrom"))
