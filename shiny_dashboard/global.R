@@ -164,7 +164,7 @@ nordstrom_df["collection"] <- sapply(nordstrom_df$watch_model, collect_collectio
 nordstrom_df["movement"] <- sapply(nordstrom_df$watch_model, collect_movement)
 nordstrom_df["bullet_d_case_d"] <- sapply(nordstrom_df$bullet_details, collect_case_diameter_from_details)
 
-amazon_df <- read.csv("data/amazonsellers copy.csv", stringsAsFactors = FALSE) %>% 
+amazon_df <- read.csv("data/amazon_website.csv", stringsAsFactors = FALSE) %>% 
   mutate(price = as.numeric(gsub(",|\\$", "", price))) %>% 
   mutate(code = trimws(code)) %>% 
   mutate(model_number = trimws(code)) %>% 
@@ -265,6 +265,24 @@ nordstrom_df <- nordstrom_df %>%
            ifelse(model_number == "5686223", "607307", ifelse(model_number == "4944900" & color == "Cognac/ Grey", "3600521",
            ifelse(model_number == "5577744" & color == "Navy/ Rose Gold", "3600708",
               real_m_num)))))))))))))))))))))))))))))))))) %>% select(-real_m_num)
+
+
+# TO POPULATE 'PRODUCT COMPARISON' PAGE
+
+nordstrom_dfr <- nordstrom_df %>% mutate(., seller = "Nordstrom") %>% select(., model_number, watch_model, price, seller)
+macys_dfr <- macys_df %>% mutate(., seller = "Macys") %>% select(., model_number, watch_model, price, seller)
+movado_dfr <- movado_df %>% mutate(., seller = "Movado") %>% select(., model_number, watch_model, price, seller)
+amazon_dfr <- amazon_df %>% rename(., watch_model = product)
+amazon_dfr <- amazon_dfr %>% select(., model_number, watch_model, price, seller)
+
+all_df <- rbind(nordstrom_dfr, macys_dfr, movado_dfr, amazon_dfr)
+all_df <- all_df <- all_df %>% distinct(., model_number, seller, .keep_all = TRUE)
+all_df <- all_df %>% group_by(model_number) %>% mutate(., count = n())
+all_s_df <- all_df %>% distinct(., model_number, .keep_all = TRUE)
+all_s_df <- all_s_df %>% mutate(., name =paste(as.character(model_number), count, sep=" : " ))
+all_s_df <- all_s_df[order(-all_s_df$count),]
+a_list <- setNames(all_s_df$model_number, all_s_df$name)
+
 
 # ESTABLISH DF OF MOVADO PRODUCTS WITH COMPETITOR PRICING
 prices_df <- left_join(select(movado_df, "model_number", "watch_model", "price", "in_stock"), 

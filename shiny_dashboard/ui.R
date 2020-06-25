@@ -26,8 +26,10 @@ shinyUI(
                                     box(width = 12, align = "center",
                                       h2("Results for Movado, Macy's, Nordstrom, and Amazon"),
                                       column(width = 4, align = "center", plotOutput("total_products", height = 360), br(), br(), br(),
-                                             h4(tags$b("Total Unique Products: ", as.character(sum(nrow(movado_df), nrow(macys_df), 
-                                                                                            nrow(nordstrom_df), length(unique(amazon_df$model_number))))))),
+                                             h4(tags$b("Total Products: ", as.character(sum(nrow(movado_df), nrow(macys_df), 
+                                                                                            nrow(nordstrom_df), length(unique(amazon_df$model_number)))), br(),
+                                                       "Total Unique Products: ", as.character(length(unique(c(movado_df$model_number, macys_df$model_number, 
+                                                                                                               nordstrom_df$model_number, amazon_df$model_number))))))),
                                       column(width = 4, align = "center", plotOutput("total_reviews"), br(),
                                              h4(tags$b("Total Reviews Scraped: ", as.character(sum(sum(macys_df$review_count), sum(nordstrom_df$review_count), 
                                                                                             sum(unique(amazon_df$rev_count))))))),
@@ -156,13 +158,9 @@ shinyUI(
                   )
                   ),
           tabItem(tabName = "comparison",
-                  selectInput("select_model", label = "Select Model:", choices = sort(unique(prices_df$watch_model))),
-                  fluidRow(box(width = 6, height=400, title = "Mean Prices Per Retailer", htmlOutput("price_graph")),
-                           box(width = 6, height=400, title = "Price Against Frequency from a Seller", htmlOutput("price_bubble"))
-                  ),
-                  selectizeInput("select_prod_num", label = "Select Product Number:", choices = sort(unique(prices_df$model_number))),
-                  fluidRow(box(width = 6, title = "Retailers' Price by Product Number", htmlOutput("prod_num_graph")),
-                           infoBoxOutput("selected_prod_num"))
+                  selectizeInput("select_prod_num", label = "Select Product Number:", choices = a_list),
+                  fluidRow(box(width = 6, title = "Retailers' Price by Product Number", plotOutput("prod_num_graphh")),
+                           dataTableOutput("selected_prod_numm"))
           ),
           tabItem(tabName = "insights",
                   fluidPage(

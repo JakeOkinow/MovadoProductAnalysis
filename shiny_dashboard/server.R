@@ -162,6 +162,22 @@ function(input, output, session){
   )
   
   # PRODUCT COMPARISON
+  
+  output$prod_num_graphh <- renderPlot(
+    
+    all_df %>% filter(., model_number == input$select_prod_num) %>%
+      ggplot(aes(x=seller, y=price)) + 
+      geom_bar(stat= "identity", fill = "lightblue") +
+      ggtitle(paste(input$select_prod_num, "'s Price Distribution: ")) + 
+      xlab("Seller") + ylab("Price")
+    
+  )
+  
+  output$selected_prod_numm <- renderDataTable(
+    all_df %>% filter(., model_number == input$select_prod_num)
+  )
+  
+  
   output$price_graph <- googleVis::renderGvis(
     prices_df %>% filter(watch_model == input$select_model) %>% 
       summarise(Movado = mean(price_movado, na.rm = TRUE), "Macy's" = mean(price_macys, na.rm = TRUE), 
@@ -188,21 +204,21 @@ function(input, output, session){
   )
   
   output$prod_num_graph <- googleVis::renderGvis(
-    prices_df %>% filter(model_number == input$select_prod_num) %>% 
-      summarise(Movado = mean(price_movado, na.rm = TRUE), "Macy's" = mean(price_macys, na.rm = TRUE), 
-                "Amazon" = mean(price_amazon, na.rm = TRUE), "Nordstrom" = mean(price_nordstrom, na.rm = TRUE)) %>% 
-      pivot_longer(cols = c("Movado", "Amazon", "Macy's", "Nordstrom")) %>% 
-      googleVis::gvisColumnChart(xvar = "name", yvar = "value", 
-                                 options=list(width="auto", height="350px", bar = "{groupWidth: '95%'}", 
-                                              legend = "{position: 'none'}", #colors = "['#55c821']", 
+    prices_df %>% filter(model_number == input$select_prod_num) %>%
+      summarise(Movado = mean(price_movado, na.rm = TRUE), "Macy's" = mean(price_macys, na.rm = TRUE),
+                "Amazon" = mean(price_amazon, na.rm = TRUE), "Nordstrom" = mean(price_nordstrom, na.rm = TRUE)) %>%
+      pivot_longer(cols = c("Movado", "Amazon", "Macy's", "Nordstrom")) %>%
+      googleVis::gvisColumnChart(xvar = "name", yvar = "value",
+                                 options=list(width="auto", height="350px", bar = "{groupWidth: '95%'}",
+                                              legend = "{position: 'none'}", #colors = "['#55c821']",
                                               vAxis = "{format: 'currency', title: 'Price'}",
                                               hAxis = "{title: 'Retailer'}"))
   )
   
   output$selected_prod_num <- renderValueBox(
-    infoBox(title = movado_df[movado_df["model_number"] == input$select_prod_num, "watch_model"], 
+    infoBox(title = movado_df[movado_df["model_number"] == input$select_prod_num, "watch_model"],
             value = paste(movado_df[movado_df["model_number"] == input$select_prod_num, c("case_diameter", "dial")], collapse = "mm "),
-            color = "black", icon = icon("clock"), 
+            color = "black", icon = icon("clock"),
             href = movado_df[movado_df["model_number"] == input$select_prod_num, "url"])
   )
   
