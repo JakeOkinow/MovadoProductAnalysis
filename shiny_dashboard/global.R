@@ -9,7 +9,6 @@ library(googleVis)
 library(wordcloud)
 library(stopwords)
 # library(wesanderson)
-# library(flexdashboard)
 
 
 ### DEFINE CLEANING FUNCTIONS ###

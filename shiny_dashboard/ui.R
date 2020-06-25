@@ -19,84 +19,80 @@ shinyUI(
           tabItem(tabName = "home",
                   fluidPage(
                     fluidRow(column(width = 8, offset=2, align = "center",
-                                    box(width = 12, background = "black", align = "center", h1(tags$b("MOVADO INSIGHTS\n"), style = "font-size:55px;"),
+                                    box(width = 12, background = "navy", align = "center", h1(tags$b("MOVADO INSIGHTS\n"), style = "font-size:55px;"),
                                                     h2(tags$b("A Look into Retailers and Resellers")),
-                                                    br(),
                                                     h5("Research and modeling by Victoria Lowery and Jake Okinow")))),
-                    fluidRow(column(width = 10, offset=1, align="center", box(height = 220, width = 12, align = "center",  background = "black",
-                                 h2("Total Number of Products Scraped"),
-                                 column(width = 3, flexdashboard::gaugeOutput("gauge_movado")),
-                    column(width = 3, flexdashboard::gaugeOutput("gauge_macys")),
-                    column(width = 3, flexdashboard::gaugeOutput("gauge_nordstrom")),
-                    column(width = 3, flexdashboard::gaugeOutput("gauge_amazon")))
-                  )),
-                  fluidRow(column(width = 10, offset=1, align="center", box(height = 220, width = 12, align = "center", background = "black",
-                               h2("Total Number of Reviews Scraped"),
-                               column(width = 3, flexdashboard::gaugeOutput("gauge_movado_r")),
-                               column(width = 3, flexdashboard::gaugeOutput("gauge_macys_r")),
-                               column(width = 3, flexdashboard::gaugeOutput("gauge_nordstrom_r")),
-                               column(width = 3, flexdashboard::gaugeOutput("gauge_amazon_r")))
-                  )),
-                  fluidRow(column(width = 10, offset=1, align="center", box(height = 220, width = 12, align = "center", background = "black",
-                               h2("Average Ratings"),
-                               column(width = 3, flexdashboard::gaugeOutput("gauge_movado_s")),
-                               column(width = 3, flexdashboard::gaugeOutput("gauge_macys_s")),
-                               column(width = 3, flexdashboard::gaugeOutput("gauge_nordstrom_s")),
-                               column(width = 3, flexdashboard::gaugeOutput("gauge_amazon_s")))
-                  ))
-                  )
+                    fluidRow(column(width = 12, align="center", 
+                                    box(width = 12, align = "center",
+                                      h2("Results for Movado, Macy's, Nordstrom, and Amazon"),
+                                      column(width = 4, align = "center", plotOutput("total_products", height = 360), br(), br(), br(),
+                                             h4(tags$b("Total Unique Products: ", as.character(sum(nrow(movado_df), nrow(macys_df), 
+                                                                                            nrow(nordstrom_df), length(unique(amazon_df$model_number))))))),
+                                      column(width = 4, align = "center", plotOutput("total_reviews"), br(),
+                                             h4(tags$b("Total Reviews Scraped: ", as.character(sum(sum(macys_df$review_count), sum(nordstrom_df$review_count), 
+                                                                                            sum(unique(amazon_df$rev_count))))))),
+                                      column(width = 4, align = "center", plotOutput("total_stars", height = 360), br(), br(), br(),
+                                             h4(tags$b("Overall Average Rating: ", as.character(round(mean(c((macys_df$rating/20), 
+                                                                                              nordstrom_df$rating, amazon_df$star), na.rm=TRUE 
+                                                                                              ), 2)), " / 5")))
+                                      )
+                                    )
+                             )
+                    )
                   ),
           tabItem(tabName = "macys",
                   fluidPage(
                     h1(tags$b("Macy's Performance")),
-                    h2("Customer Satisfation: Ratings Distribution"), br(),
-                    fluidRow(column(width = 6,
-                      box(width = 12, p("Almost half of Macy's products have received a review, and those with ratings seem heavily right skewed
-                                      to being in the 90%-100% satisfaction range.", br(), br(), tags$b(paste0("In fact, ", round(100*macys_5_rating/nrow(macys_df)), "% of all Movado
-                                      products listed on Macy's.com are rated 100% satisfaction.")))),
-                      infoBox(width = 9, color = "yellow", title = "Total Unrated Products", value = sum(is.na(macys_df$rating)), icon = icon("comment-slash"),
-                              subtitle = paste0(round(100*sum(is.na(macys_df$rating))/nrow(macys_df)), "% of products listed on Macy's")),
-                      infoBox(width = 9, title="Total 100%-Scoring Products", icon = icon("star"),
-                              subtitle = paste0(round(100*macys_5_rating/nrow(macys_df)), "% of products listed on Macy's"),
-                              value = macys_5_rating)),
-                      column(width = 6,
-                        box(width = 12, plotOutput("macys_stars"))
-                             )),
+                    h2("Price Distribution"),
+                    fluidRow(box(width = 8, plotOutput("macys_price")),
+                             column(width = 4, infoBox(width = 12, title = "Average Price",
+                                                       value = paste0("$", round(mean(macys_df$price), 2))),
+                                    infoBox(width = 12, title = "Median Price",
+                                            value = paste0("$", round(median(macys_df$price), 2)))
+                             )
+                    ),
                     h2("Reviews: Presence and Distribution"), br(),
                     fluidRow(
                              column(width = 6, infoBox(width = 12, fill = TRUE, title = "Most Reviewed Product", value = macys_df[max(macys_df["review_count"]), "watch_model"],
-                                                       subtitle = paste(max(macys_df["review_count"]), "total reviews")),
+                                                       subtitle = paste(max(macys_df["review_count"]), "total reviews"),
+                                                       href = macys_df[max(macys_df["review_count"]), "url"]),
                                     box(width = 12, p("The number of products without reviews received is identical to the number of products without ratings,
                                                       possibly implying that Macy's does not allow customers to rate a product without leaving a review. A
                                                       word count of reviews written show that most do not exceed {FIND AVERAGE WORD COUNT OF MACY'S REVIEW}.",
                                                       br(), br(), "We can also see in the graph below on the right that", tags$b(" of the products receiving reviews, nearly half
                                                       of those only receive one review.")) )
                                     ),
-                             column(width = 6, box(align = "center", width = 12, shiny::htmlOutput("macys_zero_reviews_pie")),
-                             box(width = 12, plotOutput("macys_review_count_sans_0")))
+                             column(width = 6, 
+                                    tabBox(width = 12, 
+                                      tabPanel("Reviewed vs. Unreviewed", align = "center", shiny::htmlOutput("macys_zero_reviews_pie")),
+                                      tabPanel("Reviews Distribution", plotOutput("macys_review_count_sans_0"))))
                              ),
-                    h2("Price Distribution"),
-                    fluidRow(box(width = 8, plotOutput("macys_price")),
-                            column(width = 4, infoBox(width = 12, title = "Average Price",
-                                                      value = paste0("$", round(mean(macys_df$price), 2))),
-                                   infoBox(width = 12, title = "Median Price",
-                                           value = paste0("$", round(median(macys_df$price), 2)))
-                                    )
-                            )
+                    h2("Customer Satisfation: Ratings Distribution"), br(),
+                    fluidRow(column(width = 6,
+                                    box(width = 12, p("Almost half of Macy's products have received a review, and those with ratings seem heavily right skewed
+                                      to being in the 90%-100% satisfaction range.", br(), br(), tags$b(paste0("In fact, ", round(100*macys_5_rating/nrow(macys_df)), "% of all Movado
+                                      products listed on Macy's.com are rated 100% satisfaction.")))),
+                                    infoBox(width = 9, color = "yellow", title = "Total Unrated Products", value = sum(is.na(macys_df$rating)), icon = icon("comment-slash"),
+                                            subtitle = paste0(round(100*sum(is.na(macys_df$rating))/nrow(macys_df)), "% of products listed on Macy's")),
+                                    infoBox(width = 9, title="Total 100%-Scoring Products", icon = icon("star"),
+                                            subtitle = paste0(round(100*macys_5_rating/nrow(macys_df)), "% of products listed on Macy's"),
+                                            value = macys_5_rating)),
+                             column(width = 6,
+                                    box(width = 12, plotOutput("macys_stars"))
+                             ))
                       )
                   ),
           tabItem(tabName = "nordstrom",
                   fluidPage(
                     h1(tags$b("Nordstrom's Performance")),
-                    h2("Customer Satisfation: Ratings Distribution"), br(),
-                    fluidRow(box(width = 6, plotOutput("nordstrom_stars")),
-                             column(width = 6, infoBox(width = 10, title="Total 5-Star-Rated Products", icon = icon("star"),
-                                                       subtitle = paste0(round(100*nordstrom_5_rating/nrow(nordstrom_df)), "% of Movado products"),
-                                                       value = nordstrom_5_rating),
-                                    infoBox(width = 10, color = "yellow", title = "Total Unrated Products", value = sum(is.na(nordstrom_df$rating)), icon = icon("comment-slash"),
-                                            subtitle = paste0(round(100*sum(is.na(nordstrom_df$rating))/nrow(nordstrom_df)), "% of Movado products"))
+                    h2("Price Distribution"),
+                    fluidRow(box(width = 8, plotOutput("nordstrom_price")),
+                             column(width = 4, infoBox(width = 12, title = "Average Price",
+                                                       value = paste0("$", round(mean(nordstrom_df$price), 2))),
+                                    infoBox(width = 12, title = "Median Price",
+                                            value = paste0("$", round(median(nordstrom_df$price), 2)))
                                     )
-                             ),
+                              ),
                     h2("Reviews: Presence and Distribution"), br(),
                     fluidRow(box(width = 7, p("Almost exactly half of all products listed on Nordstrom have received at least one review.
                                    Of the products who have received reviews, a majority have received only 1-3 reviews. One
@@ -105,16 +101,18 @@ shinyUI(
                              column(width = 5, infoBox(width = 12, fill = TRUE, title = "Most Reviewed Product", value = nordstrom_df[max(nordstrom_df["review_count"]), "watch_model"],
                                                        subtitle = paste(max(nordstrom_df["review_count"]), "total reviews")))),
                     fluidRow(box(align = "center", width = 5, htmlOutput("nordstrom_zero_reviews_pie")),
-                             box(width = 7, plotOutput("nordstrom_review_count_sans_0"))),
-                    h2("Price Distribution"),
-                    fluidRow(box(width = 6, plotOutput("nordstrom_price")),
-                             column(width = 6, infoBox(width = 10, title = "Average Price",
-                                                       value = paste0("$", round(mean(nordstrom_df$price), 2))),
-                                    infoBox(width = 10, title = "Median Price",
-                                            value = paste0("$", round(median(nordstrom_df$price), 2)))
-                                    )
-                            )
-                      )
+                             box(width = 7, plotOutput("nordstrom_review_count_sans_0"))
+                      ),
+                  h2("Customer Satisfation: Ratings Distribution"), br(),
+                  fluidRow(box(width = 6, plotOutput("nordstrom_stars")),
+                           column(width = 6, infoBox(width = 10, title="Total 5-Star-Rated Products", icon = icon("star"),
+                                                     subtitle = paste0(round(100*nordstrom_5_rating/nrow(nordstrom_df)), "% of Movado products"),
+                                                     value = nordstrom_5_rating),
+                                  infoBox(width = 10, color = "yellow", title = "Total Unrated Products", value = sum(is.na(nordstrom_df$rating)), icon = icon("comment-slash"),
+                                          subtitle = paste0(round(100*sum(is.na(nordstrom_df$rating))/nrow(nordstrom_df)), "% of Movado products"))
+                                  )
+                          )
+                  )
                   ),
           tabItem(tabName = "amazon", 
                   fluidPage(
@@ -280,15 +278,17 @@ shinyUI(
                                                                                       about four more words on average per review written.")
                                        ))
                     ),
-                    h3("Frequent Words"),
+                    h3("Frequent Review Words"),
                     fluidRow(
                       column(width = 6, align = "center", box(background = "navy", width = 12, imageOutput("review_word_cloud"))),
                       # box(background = "navy", width = 6, plotOutput("review_word_cloud")),
-                      box("This will discuss popular words used in reviews")
+                      box(width = 4, "The word cloud to the left breaks down the popular words found in reviews. 
+                      Some of the more frequent words are 'beautiful' and 'love'. This is somewhat expected as we saw most of the ratings for all three 
+                          retailers are very positive.")
                     ),
                     h2("Product Descriptions"),
                     fluidRow(
-                      box(width =4, "This will find how many Nordstrom descriptions are incorrect. How many descriptions say 'museum dot'."),
+                      box(width = 4, ""),
                       tabBox(width = 8, tabPanel("Incorrect Measurements", DT::dataTableOutput("incorrect_nordstrom")),
                              tabPanel("Vague Product Names", DT::dataTableOutput("vague_nordstrom")),
                              tabPanel("Vague Descriptions", DT::dataTableOutput("vague_description_nordstrom"))

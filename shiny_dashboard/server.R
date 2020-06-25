@@ -1,140 +1,82 @@
 
 function(input, output, session){
-
+  colors = c("Movado" = "#8e0000", "Macy's" = "#171b64", "Nordstrom" = "#9ec2e1", "Amazon" = "#e5a0a0")
+  
     # HOME
-  output$gauge_movado <- flexdashboard::renderGauge(
-    flexdashboard::gauge(nrow(movado_df), label = "Movado.com", min = 0, max = 400, 
-          flexdashboard::gaugeSectors(success = c(250, 400), 
-                                 warning = c(100, 250),
-                                 danger = c(0, 100)))
+  
+  output$total_products <- renderPlot(
+    data.frame("Retailer" = c("Movado", "Macy's", "Nordstrom", "Amazon"), 
+               "Products" = c(nrow(movado_df), nrow(macys_df), nrow(nordstrom_df), 
+                              length(unique(amazon_df$model_number)))) %>% 
+      mutate(Retailer = fct_relevel(Retailer, "Movado", "Macy's", "Nordstrom", "Amazon")) %>% 
+      ggplot(aes(x=Retailer, y=Products)) + geom_col(aes(fill = Retailer), alpha = .8) + 
+      scale_fill_manual(values = colors) + theme(legend.position = "none") + 
+      ggtitle("Total Number of Products Scraped") + 
+      geom_text(aes(label = Products, vjust = 2), color = rep(c("white", "black"), each = 2)) 
+
+    
   )
   
-  output$gauge_macys <- flexdashboard::renderGauge(
-    flexdashboard::gauge(nrow(macys_df), label = "Macys.com", min = 0, max = 400, 
-                         flexdashboard::gaugeSectors(success = c(250, 400), 
-                                                     warning = c(100, 250),
-                                                     danger = c(0, 100)))
+  output$total_reviews <- renderPlot(
+    data.frame("Retailer" = c("Movado", "Macy's", "Nordstrom", "Amazon"), 
+               "Reviews" = c(0, sum(macys_df$review_count), sum(nordstrom_df$review_count), 
+                             sum(unique(amazon_df$rev_count)))) %>% 
+      mutate(Retailer = fct_relevel(Retailer, "Movado", "Macy's", "Nordstrom", "Amazon")) %>% 
+      ggplot(aes(x=Retailer, y=Reviews)) + geom_col(aes(fill = Retailer), alpha = .8) + 
+      scale_fill_manual(values = colors) + theme(legend.position = "bottom") + 
+      ggtitle("Total Number of Reviews") + 
+      geom_text(aes(label = Reviews, vjust = 2), color = rep(c("white", "black"), each = 2)) 
   )
   
-  output$gauge_nordstrom <- flexdashboard::renderGauge(
-    flexdashboard::gauge(nrow(nordstrom_df), label = "Nordstrom.com", min = 0, max = 400, 
-                         flexdashboard::gaugeSectors(success = c(250, 400), 
-                                                     warning = c(100, 250),
-                                                     danger = c(0, 100)))
-  )
-  
-  output$gauge_amazon <- flexdashboard::renderGauge(
-    flexdashboard::gauge(length(unique(amazon_df$model_number)), label = "Amazon.com", min = 0, max = 400, 
-                         flexdashboard::gaugeSectors(success = c(250, 400), 
-                                                     warning = c(100, 250),
-                                                     danger = c(0, 100)))
-  )
-  
-  output$gauge_movado_r <- flexdashboard::renderGauge(
-    flexdashboard::gauge(0, label = "Movado.com", min = 0, max = 1500, 
-                         flexdashboard::gaugeSectors(success = c(1000, 1500), 
-                                                     warning = c(500, 1000),
-                                                     danger = c(0, 500)))
-  )
-  
-  output$gauge_macys_r <- flexdashboard::renderGauge(
-    flexdashboard::gauge(sum(macys_df$review_count), label = "Macys.com", min = 0, max = 1500, 
-                         flexdashboard::gaugeSectors(success = c(1000, 1500), 
-                                                     warning = c(500, 1000),
-                                                     danger = c(0, 500)))
-  )
-  
-  output$gauge_nordstrom_r <- flexdashboard::renderGauge(
-    flexdashboard::gauge(sum(nordstrom_df$review_count), label = "Nordstrom.com", min = 0, max = 1500, 
-                         flexdashboard::gaugeSectors(success = c(1000, 1500), 
-                                                     warning = c(500, 1000),
-                                                     danger = c(0, 500)))
-  )
-  
-  output$gauge_amazon_r <- flexdashboard::renderGauge(
-    flexdashboard::gauge(sum(unique(amazon_df$rev_count)), label = "Amazon.com", min = 0, max = 1500, 
-                         flexdashboard::gaugeSectors(success = c(1000, 1500), 
-                                                     warning = c(500, 1000),
-                                                     danger = c(0, 500)))
-  )
-  
-  output$gauge_movado_s <- flexdashboard::renderGauge(
-    flexdashboard::gauge(0, label = "Movado.com", min = 0, max = 5, 
-                         flexdashboard::gaugeSectors(success = c(4, 5), 
-                                                     warning = c(3, 4),
-                                                     danger = c(1, 3)))
-  )
-  
-  output$gauge_macys_s <- flexdashboard::renderGauge(
-    flexdashboard::gauge(round(mean(macys_df$rating, na.rm=TRUE)/20, 2), label = "Macys.com", min = 0, max = 5, 
-                         flexdashboard::gaugeSectors(success = c(4, 5), 
-                                                     warning = c(3, 4),
-                                                     danger = c(1, 3)))
-  )
-  
-  output$gauge_nordstrom_s <- flexdashboard::renderGauge(
-    flexdashboard::gauge(round(mean(nordstrom_df$rating, na.rm=TRUE), 2), label = "Nordstrom.com", min = 0, max = 5, 
-                         flexdashboard::gaugeSectors(success = c(4, 5), 
-                                                     warning = c(3, 4),
-                                                     danger = c(1, 3)))
-  )
-  
-  output$gauge_amazon_s <- flexdashboard::renderGauge(
-    flexdashboard::gauge(round(mean(amazon_df$star, na.rm=TRUE), 2), label = "Amazon.com", min = 0, max = 5, 
-                         flexdashboard::gaugeSectors(success = c(4, 5), 
-                                                     warning = c(3, 4),
-                                                     danger = c(1, 3)))
+  output$total_stars <- renderPlot(
+    data.frame("Retailer" = c("Movado", "Macy's", "Nordstrom", "Amazon"), 
+               "Rating" = c(0, round(mean(macys_df$rating, na.rm=TRUE)/20, 2), 
+                             round(mean(nordstrom_df$rating, na.rm=TRUE), 2), 
+                             round(mean(amazon_df$star, na.rm=TRUE), 2))) %>% 
+      mutate(Retailer = fct_relevel(Retailer, "Movado", "Macy's", "Nordstrom", "Amazon")) %>% 
+      ggplot(aes(x=Retailer, y=Rating)) + geom_col(aes(fill = Retailer), alpha = .8) + 
+      scale_fill_manual(values = colors) + theme(legend.position = "none") + 
+      ggtitle("Overall Rating Received") + ylim(0, 5) + 
+      geom_text(aes(label = Rating, vjust = 2), color = rep(c("white", "black"), each = 2)) 
+    
   )
   
   # MACYS
-  output$macys_stars <- renderPlot(
-    macys_df %>% ggplot() + geom_histogram(aes(x=rating), fill="red") + ggtitle("Macy's Ratings Distribution") + 
-      xlab("Rating (%)") + ylab("Count")
+  output$macys_price <- renderPlot(
+    macys_df %>% ggplot() + geom_histogram(aes(x=price), binwidth = 250, fill="#171b64") + 
+      ggtitle("Macy's Price Distribution per $250") + xlab("Watch Price") + ylab("Count") + 
+      scale_x_continuous(labels=dollar_format(prefix = "$"), breaks = seq(0, 3500, 250)) 
   )
   
   output$macys_zero_reviews_pie <- googleVis::renderGvis({
     macys_df %>% transmute(reviewed = ifelse(review_count > 0, "Yes", "No")) %>% 
       group_by(reviewed) %>% tally() %>% 
       googleVis::gvisPieChart(labelvar = "reviewed", numvar = "n", 
-                   options=list(width="400px", height="350px", 
-                                title = "Macy's Products With Reviews versus Products Without",
-                                chartArea= "{left:40, top:30, bottom:0, right:0}", 
-                                colors="['#db9081', '#81db92']"))
+                              options=list(width="400px", height="400px", 
+                                           title = "Macy's Products With Reviews versus Products Without",
+                                           chartArea= "{left:40, top:50, bottom:0, right:0}", 
+                                           colors="['#db9081', '#81db92']"))
   })
   
-  output$macys_review_count <- renderPlot(
-    macys_df %>% ggplot() + geom_histogram(aes(x=review_count), fill="red") + ggtitle("Macy's Review per Product Distribution") + 
-      xlab("Number of Reviews / Product") + ylab("Count")
-  )
-  
   output$macys_review_count_sans_0 <- renderPlot(
-    macys_df %>% filter(review_count > 0) %>% ggplot() + geom_histogram(binwidth = 1, aes(x=review_count), fill="red") + 
-      ggtitle("Macy's Review per Product Distribution, (Review Count > 0)") + 
-      xlab("Number of Reviews / Product") + ylab("Count") + xlim(0, 25)
+    macys_df %>% filter(review_count > 0) %>% ggplot() + geom_histogram(binwidth = 1, aes(x=review_count), fill="#171b64") + 
+      ggtitle("Macy's Review Count per Product, (Review Count > 0)") + 
+      xlab("Number of Reviews per Product") + ylab("Count") + xlim(0, 25)
   )
   
-  output$macys_price <- renderPlot(
-    macys_df %>% ggplot() + geom_histogram(aes(x=price), fill="red") + ggtitle("Macy's Price Distribution") +
-      xlab("Watch Price") + ylab("Count")
+  output$macys_stars <- renderPlot(
+    macys_df %>% ggplot(aes(x=rating)) + geom_histogram(fill="#171b64", binwidth = 10) + 
+      ggtitle(paste0("Macy's Ratings Distribution per 10 Points, ", as.character(sum(!is.na(macys_df$rating))), " total ratings")) + 
+      xlab("Ratings (%)") + ylab("Count") 
   )
   
-  # output$combo_macys_price <- renderGvis(
-  #    macys_df %>% select("Price" = price) %>%
-  #     gvisHistogram(options=list(width="auto", height="450px", legend = "{position: 'top'}", #colors = "['#55c821']",
-  #                                hAxis = "{format: 'currency', title: 'Price'}",
-  #                                vAxis = "{title: 'Count'}"))
-    
-    # macys_df %>% group_by(group) %>% summarise(Price = mean(price, na.rm = TRUE), "Product Count" = n(), "Review Count" = sum(review_count)) %>% 
-    #   gvisColumnChart(xvar = "Price", yvar = "Product Count", 
-    #                   options=list(width="auto", height="450px", legend = "{position: 'top'}", #colors = "['#55c821']", 
-    #                                hAxis = "{format: 'currency', title: 'Price'}",
-    #                                vAxis = "{title: 'Count'}"))
-  # )
+  
   
   # NORDSTROM
-  output$nordstrom_stars <- renderPlot(
-    nordstrom_df %>% ggplot() + geom_histogram(aes(x=rating), fill="gold") + ggtitle("Nordstrom's Ratings Distribution") + 
-      xlab("Rating (1-5 Stars)") + ylab("Count")
+  output$nordstrom_price <- renderPlot(
+    nordstrom_df %>% ggplot() + geom_histogram(aes(x=price), binwidth = 250, fill="#9ec2e1") + 
+      ggtitle("Nordstrom's Price Distribution per $250") + xlab("Watch Price") + ylab("Count") + 
+      scale_x_continuous(labels=dollar_format(prefix = "$"), breaks = seq(0, 3500, 250)) 
   )
   
   output$nordstrom_zero_reviews_pie <- googleVis::renderGvis(
@@ -148,14 +90,15 @@ function(input, output, session){
   )
   
   output$nordstrom_review_count_sans_0 <- renderPlot(
-    nordstrom_df %>% filter(review_count > 0) %>% ggplot() + geom_histogram(binwidth = 1, aes(x=review_count), fill="gold") + 
+    nordstrom_df %>% filter(review_count > 0) %>% ggplot() + geom_histogram(binwidth = 1, aes(x=review_count), fill="#9ec2e1") + 
       ggtitle("Nordstrom's Review per Product Distribution, (Review Count > 0)") + 
-      xlab("Number of Reviews / Product") + ylab("Count") + xlim(0, 70)
+      xlab("Number of Reviews per Product") + ylab("Count") + xlim(0, 40)
   )
-  
-  output$nordstrom_price <- renderPlot(
-    nordstrom_df %>% ggplot() + geom_histogram(aes(x=price), fill="gold") + ggtitle("Nordstrom's Price Distribution") + 
-      xlab("Watch Price") + ylab("Count")
+
+  output$nordstrom_stars <- renderPlot(
+    nordstrom_df %>% ggplot() + geom_histogram(aes(x=rating), binwidth = .5, fill="#9ec2e1") + 
+      ggtitle(paste0("Nordstrom's Ratings Distribution per 1/2 Star, ",as.character(sum(is.na(nordstrom_df$rating))), " total ratings")) + 
+      xlab("Rating (1-5 Stars)") + ylab("Count")
   )
   
   
@@ -273,7 +216,7 @@ function(input, output, session){
                                    round(median(nordstrom_df$price), 2), round(median(amazon_df$price), 2)),
                "Seller"=c("Movado", "Macy's", "Nordstrom", "Amazon")) %>% 
       ggplot(aes(x = Median.Prices, y = Mean.Prices, color = Seller)) + geom_point(size=9) + 
-      geom_text(aes(label=Seller), vjust=-2) + coord_cartesian(xlim = c(350, 750), ylim = c(450, 850)) +
+      geom_text(aes(label=Seller), hjust=1.5) + coord_cartesian(xlim = c(350, 750), ylim = c(450, 850)) +
       xlab("Median Prices") + ylab("Mean Prices") + ggtitle("Comparing Mean and Median Prices") +
       theme(legend.position="none") + guides(size=FALSE) + scale_y_continuous(labels=dollar_format(prefix = "$")) +
       scale_x_continuous(labels=dollar_format(prefix = "$")) + scale_color_manual(values = colors) 
@@ -359,12 +302,13 @@ function(input, output, session){
     data.frame("Retailer" = c("Macy's", "Nordstrom"), "Average" = c(mean(macys_df$avg_w_count), mean(nordstrom_df$avg_w_count))) %>% 
       ggplot(aes(x = Retailer, y=Average, fill = Retailer)) + geom_col(alpha = .8) + 
       geom_text(aes(label = round(Average, 1), vjust = 2), color = c("white", "black")) + 
-      scale_fill_manual(values = c("Nordstrom" = "#9ec2e1", "Macy's" = "#171b64")) + ggtitle("Average Word Count, per Retailer (All Products Included)")
+      scale_fill_manual(values = c("Nordstrom" = "#9ec2e1", "Macy's" = "#171b64")) + 
+      ggtitle("Average Word Count, per Retailer (All Products Included)")
   )
   
   output$missing_reviews <- renderPlot(
-    data.frame("Retailer" = c("Macy's", "Nordstrom", "Amazon"), "Unreviewed" = c(sum(macys_df$review_count == 0), 
-                                                                                 sum(nordstrom_df$review_count == 0), sum(amazon_df$rev_count == 0)), 
+    data.frame("Retailer" = c("Macy's", "Nordstrom", "Amazon"), 
+               "Unreviewed" = c(sum(macys_df$review_count == 0), sum(nordstrom_df$review_count == 0), sum(amazon_df$rev_count == 0)), 
                "Reviewed" = c(sum(macys_df$review_count != 0), sum(nordstrom_df$review_count != 0), sum(amazon_df$rev_count != 0))) %>% 
       pivot_longer(cols = c(Reviewed, Unreviewed)) %>% 
       ggplot(aes(x = Retailer)) + geom_col(aes(y = value, fill = name), position = position_fill(reverse = TRUE)) + 
