@@ -34,8 +34,9 @@ shinyUI(
                                              h4(tags$b("Total Reviews Scraped: ", as.character(sum(sum(macys_df$review_count), sum(nordstrom_df$review_count), 
                                                                                             sum(unique(amazon_df$rev_count))))))),
                                       column(width = 4, align = "center", plotOutput("total_stars", height = 360), br(), br(), br(),
-                                             h4(tags$b("Overall Average Rating: ", as.character(round(mean(c((macys_df$rating/20), 
-                                                                                              nordstrom_df$rating, amazon_df$star), na.rm=TRUE 
+                                             h4(tags$b("Overall Average Rating: ", as.character(round(mean(c(round(mean(macys_df$rating, na.rm=TRUE)/20, 2), 
+                                                                                                             round(mean(nordstrom_df$rating, na.rm=TRUE), 2), 
+                                                                                                             round(mean(amazon_df$star, na.rm=TRUE), 2)) 
                                                                                               ), 2)), " / 5")))
                                       )
                                     )
@@ -55,9 +56,9 @@ shinyUI(
                     ),
                     h2("Reviews: Presence and Distribution"), br(),
                     fluidRow(
-                             column(width = 6, infoBox(width = 12, fill = TRUE, title = "Most Reviewed Product", value = macys_df[max(macys_df["review_count"]), "watch_model"],
+                             column(width = 6, infoBox(width = 12, fill = TRUE, title = "Most Reviewed Product", value = macys_df[macys_df["review_count"] == max(macys_df["review_count"]), "watch_model"],
                                                        subtitle = paste(max(macys_df["review_count"]), "total reviews"),
-                                                       href = macys_df[max(macys_df["review_count"]), "url"]),
+                                                       href = macys_df[macys_df["review_count"] == max(macys_df["review_count"]), "url"]),
                                     box(width = 12, p("The number of products without reviews received is identical to the number of products without ratings,
                                                       possibly implying that Macy's does not allow customers to rate a product without leaving a review.",
                                                       br(), br(), "We can also see in the graph below on the right that", tags$b(" of the products receiving reviews, nearly half
@@ -99,8 +100,11 @@ shinyUI(
                                    Of the products who have received reviews, a majority have received only 1-3 reviews. One
                                    outlier, the Movado", as.character(nordstrom_df[max(nordstrom_df["review_count"]), "watch_model"]), "has over 65 reviews and greatly surpasses all
                                    other Movado products in terms of reviews received.")),
-                             column(width = 5, infoBox(width = 12, fill = TRUE, title = "Most Reviewed Product", value = nordstrom_df[max(nordstrom_df["review_count"]), "watch_model"],
-                                                       subtitle = paste(max(nordstrom_df["review_count"]), "total reviews")))),
+                             column(width = 5, infoBox(width = 12, fill = TRUE, title = "Most Reviewed Product", 
+                                                       subtitle = paste(max(nordstrom_df["review_count"]), "total reviews"),
+                                                       value = nordstrom_df[nordstrom_df["review_count"] == max(nordstrom_df["review_count"]), "watch_model"], 
+                                                       href = nordstrom_df[nordstrom_df["review_count"] == max(nordstrom_df["review_count"]), "url"]))
+                             ),
                     fluidRow(box(align = "center", width = 5, htmlOutput("nordstrom_zero_reviews_pie")),
                              box(width = 7, plotOutput("nordstrom_review_count_sans_0"))
                       ),
@@ -208,8 +212,8 @@ shinyUI(
                       ),
                       infoBox(fill = TRUE, color = "red", icon = icon("exclamation"),
                               width = 12, title = "3rd Largest Discount", value = paste0("$", sort(prices_df$difference, decreasing=TRUE)[3]),
-                              subtitle = paste0(ifelse(thrd_diff$price_macys + thrd_diff$difference == thrd_diff$price_movado, "Macy's",
-                                                      ifelse(thrd_diff$price_amazon + thrd_diff$difference == thrd_diff$price_movado, "Amazon", "Nordstrom")), ", ",
+                              subtitle = paste0(ifelse(thrd_diff$price_nordstrom + thrd_diff$difference == thrd_diff$price_movado, "Nordstrom",
+                                                      ifelse(thrd_diff$price_amazon + thrd_diff$difference == thrd_diff$price_movado, "Amazon", "Macy's")), ", ",
                                                thrd_diff[["watch_model"]]),
                               href = ifelse(min(thrd_diff[c("price_amazon", "price_macys", "price_nordstrom")], na.rm = TRUE) == thrd_diff$price_nordstrom, nordstrom_df[nordstrom_df$model_number == thrd_diff$model_number, "url"],
                                             ifelse(min(thrd_diff[c("price_amazon", "price_macys", "price_nordstrom")], na.rm = TRUE) == thrd_diff$price_macys, macys_df[macys_df$model_number == thrd_diff$model_number, "url"],
